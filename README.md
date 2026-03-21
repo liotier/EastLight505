@@ -1,119 +1,145 @@
 # EastLight
 
-**Alpha — not ready for production use.** See the [feasibility study](rc505-mk2-feasibility.md) for context.
+Open-source **command-line** editor/librarian for the **Roland RC-505 MK2** loop station.
 
-This project is under active development. The file format parser achieves byte-for-byte round-trip fidelity and ~98% schema coverage, but the CLI interface, error handling, and edge cases are still maturing. Back up your SD card before using EastLight on real data.
+EastLight reads and writes the RC-505 MK2's SD card backup format (`ROLAND/` directory), giving you full control over memory patches, audio tracks, effects, and system settings from the terminal.
 
-## What it is
-
-Open-source editor/librarian for the **Roland RC-505 MK2** loop station.
-
-EastLight reads and writes the RC-505 MK2's SD card backup format (ROLAND/ directory), giving you full control over memory patches, audio tracks, effects, and system settings from the command line.
+> **v0.1.0 — Alpha release.** The file format parser achieves byte-for-byte round-trip fidelity and ~98% schema coverage. Back up your SD card before using EastLight on real data. A graphical interface is planned for a future release.
 
 ## Install
+
+### From PyPI (recommended)
 
 ```
 pip install eastlight
 ```
 
-Or from source:
+### From source
 
 ```
+git clone https://github.com/liotier/EastLightRC-505mk2Librarian.git
+cd EastLightRC-505mk2Librarian
 pip install -e .
 ```
 
-Requires Python 3.11+ and libsndfile (for WAV/FLAC/OGG audio support).
+### Requirements
 
-## Quick start
+- **Python 3.11+**
+- **libsndfile** — required by the `soundfile` dependency for audio I/O
 
-### Find your device
+libsndfile is bundled automatically on Windows and macOS. On Linux, install it with your package manager:
 
-Connect your RC-505 MK2 via USB and mount the SD card, then:
+```
+# Debian / Ubuntu
+sudo apt install libsndfile1
+
+# Fedora
+sudo dnf install libsndfile
+
+# Arch
+sudo pacman -S libsndfile
+```
+
+### Verify installation
+
+```
+eastlight --version
+eastlight --help
+```
+
+## Getting started
+
+### 1. Connect your RC-505 MK2
+
+Connect via USB and mount the SD card (the device appears as a USB mass storage device), then point EastLight at the `ROLAND/` directory:
 
 ```
 eastlight detect
 eastlight config --set-dir /media/user/RC505/ROLAND
 ```
 
-Once a default directory is set, all commands use it automatically. You can always override with `-d/--dir`.
+Once a default directory is set, all commands use it automatically. Override anytime with `-d /path/to/ROLAND`.
 
-### Browse memories
-
-```
-eastlight list
-eastlight list -d /media/user/RC505/ROLAND
-```
-
-Shows all 99 memory slots with names, track indicators, tempo, and backup status.
-
-### Inspect a memory
+### 2. Browse and inspect memories
 
 ```
-eastlight show 1
-eastlight show 1 -s TRACK1
-eastlight show 1 --raw
+eastlight list                        # All 99 memory slots
+eastlight show 1                      # Full details for memory 1
+eastlight show 1 -s TRACK1            # Just track 1 parameters
+eastlight show 1 --raw                # Raw field values
 ```
 
-### Edit parameters
+### 3. Edit parameters
 
 ```
 eastlight set 1 MASTER pan 75
 eastlight name 1 "My Loop"
+eastlight set 1 TRACK1 play_level 100 --dry-run   # Preview without writing
 ```
 
-Set commands warn when values are outside schema-defined ranges or invalid for boolean/enum fields. Use `--dry-run` / `-n` to preview changes without writing.
+All write commands support `--dry-run` / `-n` to preview changes safely.
 
-### Organize memories
+## Command reference
 
-```
-eastlight copy 1 50
-eastlight swap 1 50
-eastlight clear 5
-eastlight clear 5 --dry-run
-eastlight diff 1 50
-```
+### Memory management
 
-`clear` removes a memory slot's RC0 data and WAV audio (with automatic backup first).
+| Command | Description |
+|---------|-------------|
+| `eastlight list` | List all 99 memory slots with names, tracks, tempo |
+| `eastlight show <mem>` | Show parameters for a memory (`-s SECTION` to filter) |
+| `eastlight set <mem> <section> <param> <value>` | Set a parameter value |
+| `eastlight name <mem> <name>` | Rename a memory slot (max 12 characters) |
+| `eastlight copy <src> <dst>` | Copy a memory slot (RC0 + WAV audio) |
+| `eastlight swap <a> <b>` | Swap two memory slots |
+| `eastlight clear <mem>` | Clear a memory slot (with automatic backup) |
+| `eastlight diff <a> <b>` | Show differences between two memories |
 
 ### Batch operations
 
+| Command | Description |
+|---------|-------------|
+| `eastlight bulk-set <range> <section> <param> <value>` | Set a parameter across multiple memories |
+| `eastlight template-export <mem> <file>` | Export a memory's parameters as YAML |
+| `eastlight template-apply <file> <range>` | Apply a YAML template to one or more memories |
+
+Memory ranges support commas and dashes: `1-5`, `1,3,5`, `1-3,7,10-12`.
+
 ```
 eastlight bulk-set 1-10 MASTER play_level 100
-eastlight bulk-set 1,3,5 TRACK1 pan 50 --dry-run
 eastlight template-export 1 my_settings.yaml
 eastlight template-export 1 fx_only.yaml -s TRACK1 -s MASTER
 eastlight template-apply my_settings.yaml 5
 eastlight template-apply settings.yaml 1-10 --dry-run
 ```
 
-- `bulk-set` applies the same parameter change across multiple memories at once
-- `template-export` saves a memory's parameters as YAML (no audio)
-- `template-apply` applies a YAML template to one or more memories
-
-Memory ranges support commas and dashes: `1-5`, `1,3,5`, `1-3,7,10-12`.
-
 ### Audio import/export
 
+| Command | Description |
+|---------|-------------|
+| `eastlight wav-info <mem>` | Show WAV audio info for all tracks |
+| `eastlight wav-export <mem> <track> <file>` | Export a track's audio |
+| `eastlight wav-import <mem> <track> <file>` | Import an audio file into a track |
+
 ```
-eastlight wav-info 1
 eastlight wav-export 1 1 my_loop.wav
 eastlight wav-export 1 1 my_loop.wav --format pcm24
 eastlight wav-import 1 2 recording.wav
 ```
 
-Supported import formats: WAV, FLAC, OGG (anything libsndfile supports).
-Audio is converted to 32-bit float stereo at 44.1 kHz (the device's native format).
-Mono files are automatically duplicated to stereo.
+Supported import formats: WAV, FLAC, OGG (anything libsndfile supports). Audio is automatically converted to 32-bit float stereo at 44.1 kHz (the device's native format). Mono files are duplicated to stereo.
 
 ### Effects
 
-```
-eastlight fx-show 1 ifx
-eastlight fx-show 1 tfx -g A
-eastlight fx-show 1 ifx -s AA
+| Command | Description |
+|---------|-------------|
+| `eastlight fx-show <mem> <ifx\|tfx>` | Show FX chain parameters |
+| `eastlight fx-set <mem> <ifx\|tfx> <slot> <param> <value>` | Set an FX parameter |
 
+```
+eastlight fx-show 1 ifx                       # All input FX
+eastlight fx-show 1 tfx -g A                  # Track FX group A
+eastlight fx-show 1 ifx -s AA                 # Specific slot
 eastlight fx-set 1 ifx AA feedback 30
-eastlight fx-set 1 ifx AA sw 1
 eastlight fx-set 1 ifx AA fx_type 35 --dry-run
 ```
 
@@ -121,106 +147,82 @@ eastlight fx-set 1 ifx AA fx_type 35 --dry-run
 
 ### System settings
 
+| Command | Description |
+|---------|-------------|
+| `eastlight sys-show` | Show system settings (`-s SECTION` to filter, `--all` for everything) |
+| `eastlight sys-set <section> <param> <value>` | Set a system parameter |
+
 ```
-eastlight sys-show
 eastlight sys-show -s SETUP
-eastlight sys-show --all
 eastlight sys-set SETUP contrast 8
 eastlight sys-set PREF pref_eq 0 --dry-run
 ```
 
 ### MIDI controller assignments
 
+| Command | Description |
+|---------|-------------|
+| `eastlight ctl-show` | Show controller assignments (`--type ictl` or `--type ectl`) |
+| `eastlight ctl-set <instance> <param> <value>` | Set a controller assignment |
+
 ```
-eastlight ctl-show
-eastlight ctl-show --type ictl
 eastlight ctl-show --type ectl
 eastlight ctl-set ICTL1_TRACK1_FX ctl_func 42
 eastlight ctl-set ECTL_CTL1 ctl_func 10
 eastlight ctl-set ECTL_EXP1 ctl_range 64
-eastlight ctl-set ICTL1_PEDAL1 ctl_mode 0
 ```
 
 Internal controllers (ICTL): 47 panel button and pedal assignments across 3 banks.
 External controllers (ECTL): 6 MIDI CC inputs (CTL1-4, EXP1-2).
-
-All 201 CTL FUNC values (0-200) are mapped to their display names with push/hold/click sub-actions. `ctl-show` resolves function indices to human-readable names; `ctl-set` shows old and new function names when changing assignments.
+All 201 CTL FUNC values are mapped to human-readable names with push/hold/click sub-actions.
 
 ### Backup management
 
-```
-eastlight backup list
-eastlight backup show 20260101T120000Z
-eastlight backup restore 20260101T120000Z
-eastlight backup prune --keep 3
-```
+| Command | Description |
+|---------|-------------|
+| `eastlight backup list` | List all automatic backups |
+| `eastlight backup show <timestamp>` | Show backup details |
+| `eastlight backup restore <timestamp>` | Restore a backup |
+| `eastlight backup prune --keep <n>` | Remove old backups |
 
-Backups are timestamped snapshots created automatically before every write.
+EastLight automatically backs up files before any write operation. Backups are timestamped and stored in `~/.config/eastlight/backups/` (outside the device filesystem).
 
 ### Configuration
 
-```
-eastlight config --show
-eastlight config --set-dir /media/user/RC505/ROLAND
-eastlight config --no-backup
-```
+| Command | Description |
+|---------|-------------|
+| `eastlight config --show` | Show current configuration |
+| `eastlight config --set-dir <path>` | Set default ROLAND/ directory |
+| `eastlight config --no-backup` | Disable automatic backups |
+| `eastlight detect` | Auto-detect connected RC-505 MK2 devices |
 
 Configuration is stored in `~/.config/eastlight/config.yaml`.
 
-### ROLAND directory resolution
-
-Commands find the ROLAND/ directory in this order:
+**ROLAND/ directory resolution order:**
 
 1. Explicit `-d/--dir` option
 2. Default from `eastlight config --set-dir`
 3. Single auto-detected device (USB mount scan)
 
-If multiple devices are detected and no default is set, EastLight lists them and asks you to pick one with `config --set-dir`.
+### Utility
 
-### Dry-run mode
+| Command | Description |
+|---------|-------------|
+| `eastlight parse <file>` | Parse and display raw structure of an RC0 file |
+| `eastlight --version` | Show version |
+| `eastlight --help` | Show help |
 
-All write commands support `--dry-run` / `-n` to preview what would change without touching any files:
+## Safety
+
+All write commands create an automatic backup before modifying any files. Use `--dry-run` to preview changes first.
 
 ```
 eastlight set 1 MASTER pan 75 --dry-run
 eastlight clear 5 -n
 eastlight bulk-set 1-10 MASTER play_level 100 -n
-eastlight sys-set SETUP contrast 8 -n
-eastlight fx-set 1 ifx AA feedback 30 -n
-eastlight ctl-set ECTL_CTL1 ctl_func 10 -n
-eastlight template-apply settings.yaml 1-10 --dry-run
 ```
 
-## Safety
-
-EastLight automatically backs up files before any write operation. Backups are timestamped and stored in `~/.config/eastlight/backups/` (outside the device filesystem). To disable:
-
-```
-eastlight config --no-backup
-```
-
-Use `eastlight backup list` to see snapshots and `eastlight backup restore` to roll back.
-
-## Architecture
-
-```
-src/eastlight/
-  core/
-    parser.py      Regex-based RC0 reader (handles Roland's non-standard XML)
-    writer.py      RC0 serializer (byte-for-byte roundtrip fidelity)
-    model.py       Typed data model with undo/redo and change observers
-    schema.py      YAML-driven parameter mapping with FX suffix matching
-    library.py     ROLAND/ directory operations with auto-backup
-    wav.py         32-bit float WAV import/export via libsndfile
-    config.py      User config, device auto-detection, dir resolution
-  schema/
-    *.yaml         24 section schemas + ctl_func enum (201 entries)
-    effects/       70 FX effect type schemas
-    fx_types.yaml  FX type index enum (IFX 0-65, TFX 0-69)
-    ctl_func.yaml  CTL FUNC enum (0-200) with sub-actions
-  cli/
-    main.py        Click-based CLI (25 commands)
-```
+To disable automatic backups: `eastlight config --no-backup`
 
 ## Schema coverage
 
@@ -233,11 +235,13 @@ src/eastlight/
 - All 53 ICTL + 6 ECTL controller mapping sections
 - All 201 CTL FUNC values (0-200) with push/hold/click sub-actions
 
-Remaining gaps: 13 SETUP fields (J-V), 6 PREF fields (O-T), 4 CTL FUNC preferences (MODE PLAY, MODE UNDO, QUICK CLEAR, ALL CLEAR), 3 INPUT preferences (MIC/INST1/INST2 SYSTEM/MEMORY toggle). See the [feasibility study](rc505-mk2-feasibility.md) §4.2 for details.
+Remaining gaps: 13 SETUP fields (J-V), 6 PREF fields (O-T), 4 CTL FUNC preferences (MODE PLAY, MODE UNDO, QUICK CLEAR, ALL CLEAR), 3 INPUT preferences (MIC/INST1/INST2 SYSTEM/MEMORY toggle). See the [feasibility study](rc505-mk2-feasibility.md) for details.
 
 ## Development
 
 ```
+git clone https://github.com/liotier/EastLightRC-505mk2Librarian.git
+cd EastLightRC-505mk2Librarian
 pip install -e ".[dev]"
 pytest
 ```

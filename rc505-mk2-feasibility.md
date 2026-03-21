@@ -354,6 +354,8 @@ Lower-priority items that need empirical testing on the device:
 - **ASSIGN section field mapping**: 10 fields (A-J), partially decoded (A=switch, C=target, D=source type, F=max, H=source CC, J=enable)
 - **RHYTHM.RC0 binary format**: Pattern data encoding (low priority — rhythm patterns can be edited on the device)
 - **PLAY/REC section semantics**: 8 and 6 fields respectively, need Parameter Guide cross-reference
+- **CTL FUNC PREF fields** (MENU -> CTL FUNC -> PREF): 4 settings whose RC0 storage location is unknown. MODE PLAY (SYSTEM/MEMORY), MODE UNDO (SYSTEM/MEMORY), QUICK CLEAR (ON/OFF), ALL CLEAR (ON/OFF). Likely in SYSTEM1.RC0 but not yet matched to a specific section/field. Requires before/after USB backup diff to locate.
+- **INPUT preferences** (MENU -> INPUT -> SETUP -> page 3): 3 settings — MIC, INST1, INST2 — each toggles SYSTEM/MEMORY. Controls whether input settings come from global system or per-memory. Storage location unknown; requires before/after USB backup diff.
 
 ### 4.3 The Positional Tag Mapping Problem — Largely Solved
 

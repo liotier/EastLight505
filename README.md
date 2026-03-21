@@ -233,7 +233,7 @@ src/eastlight/
 - All 53 ICTL + 6 ECTL controller mapping sections
 - All 201 CTL FUNC values (0-200) with push/hold/click sub-actions
 
-Remaining gaps: 13 SETUP fields (J-V), 6 PREF fields (O-T).
+Remaining gaps: 13 SETUP fields (J-V), 6 PREF fields (O-T), 4 CTL FUNC preferences (MODE PLAY, MODE UNDO, QUICK CLEAR, ALL CLEAR), 3 INPUT preferences (MIC/INST1/INST2 SYSTEM/MEMORY toggle). See the [feasibility study](rc505-mk2-feasibility.md) §4.2 for details.
 
 ## Development
 

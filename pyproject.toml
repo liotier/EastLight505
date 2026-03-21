@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "eastlight"
-version = "0.1.0"
+version = "0.2.0"
 description = "Open-source editor/librarian for the Roland RC-505 MK2 loop station"
 readme = "README.md"
 license = "GPL-3.0-or-later"

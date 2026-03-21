@@ -1,10 +1,10 @@
 # EastLight
 
-Open-source **command-line** editor/librarian for the **Roland RC-505 MK2** loop station.
+Open-source editor/librarian for the **Roland RC-505 MK2** loop station — CLI and GUI.
 
-EastLight reads and writes the RC-505 MK2's SD card backup format (`ROLAND/` directory), giving you full control over memory patches, audio tracks, effects, and system settings from the terminal.
+EastLight reads and writes the RC-505 MK2's SD card backup format (`ROLAND/` directory), giving you full control over memory patches, audio tracks, effects, and system settings from the terminal or from a graphical interface.
 
-> **v0.1.0 — Alpha release.** The file format parser achieves byte-for-byte round-trip fidelity and ~98% schema coverage. Back up your SD card before using EastLight on real data. A graphical interface is planned for a future release.
+> **v0.2.0 — Alpha release.** The file format parser achieves byte-for-byte round-trip fidelity and ~98% schema coverage. Back up your SD card before using EastLight on real data.
 
 ## Install
 
@@ -14,12 +14,18 @@ EastLight reads and writes the RC-505 MK2's SD card backup format (`ROLAND/` dir
 pip install eastlight
 ```
 
+For the graphical interface (PyQt6):
+
+```
+pip install eastlight[gui]
+```
+
 ### From source
 
 ```
 git clone https://github.com/liotier/EastLightRC-505mk2Librarian.git
 cd EastLightRC-505mk2Librarian
-pip install -e .
+pip install -e ".[gui]"
 ```
 
 ### Requirements
@@ -47,7 +53,32 @@ eastlight --version
 eastlight --help
 ```
 
-## Getting started
+## Graphical interface
+
+Launch the GUI with:
+
+```
+eastlight gui
+```
+
+Or point it at a specific ROLAND/ directory:
+
+```
+eastlight gui -d /media/user/RC505/ROLAND
+```
+
+The GUI provides:
+
+- **Memory list** — browse all 99 slots with name, track count, and tempo
+- **Parameter editor** — tabbed, schema-driven editors for every section (tracks, master, FX, mixer, routing, EQ, etc.)
+- **System settings** — edit SETUP, PREF, MIDI, USB, INPUT, and COLOR settings
+- **WAV import/export** — import audio files, export tracks
+- **Undo/redo** — full undo stack for parameter edits
+- **Device detection** — auto-detect connected RC-505 MK2 devices
+
+Requires `pip install eastlight[gui]` (adds PyQt6).
+
+## Getting started (CLI)
 
 ### 1. Connect your RC-505 MK2
 

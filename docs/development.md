@@ -43,7 +43,12 @@ src/eastlight/
   cli/
     main.py        Click-based CLI (25 commands)
   gui/
-    (planned)      PyQt6 graphical interface
+    __init__.py    Application launcher
+    main_window.py Main window with menu bar, toolbar, split view
+    memory_list.py Memory slot browser (99 slots)
+    memory_editor.py Tabbed parameter editor per memory
+    system_editor.py System settings editor
+    widgets.py     Schema-driven parameter controls (spinbox, combo, checkbox)
 ```
 
 ## Design principles

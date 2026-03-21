@@ -51,14 +51,16 @@ You should see the version number and a list of all available commands.
 
 ## Optional dependencies
 
-For GUI support (future):
+For the graphical interface (PyQt6):
 
 ```bash
 pip install eastlight[gui]
 ```
 
+Then launch with `eastlight gui`.
+
 For development:
 
 ```bash
-pip install -e ".[dev]"
+pip install -e ".[dev,gui]"
 ```

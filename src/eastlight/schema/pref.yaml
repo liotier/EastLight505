@@ -115,50 +115,50 @@ fields:
       0: "SYSTEM"
       1: "MEMORY"
   O:
-    name: pref_unknown_o
+    name: pref_ctl1
     type: enum
     default: 1
-    display: "Pref O"
+    display: "CTL1"
     choices:
       0: "SYSTEM"
       1: "MEMORY"
   P:
-    name: pref_unknown_p
+    name: pref_ctl2
     type: enum
     default: 1
-    display: "Pref P"
+    display: "CTL2"
     choices:
       0: "SYSTEM"
       1: "MEMORY"
   Q:
-    name: pref_unknown_q
+    name: pref_ctl3
     type: enum
     default: 1
-    display: "Pref Q"
+    display: "CTL3"
     choices:
       0: "SYSTEM"
       1: "MEMORY"
   R:
-    name: pref_unknown_r
+    name: pref_ctl4
     type: enum
     default: 1
-    display: "Pref R"
+    display: "CTL4"
     choices:
       0: "SYSTEM"
       1: "MEMORY"
   S:
-    name: pref_unknown_s
+    name: pref_exp1
     type: enum
     default: 1
-    display: "Pref S"
+    display: "EXP1"
     choices:
       0: "SYSTEM"
       1: "MEMORY"
   T:
-    name: pref_unknown_t
+    name: pref_exp2
     type: enum
     default: 1
-    display: "Pref T"
+    display: "EXP2"
     choices:
       0: "SYSTEM"
       1: "MEMORY"

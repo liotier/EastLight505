@@ -87,29 +87,74 @@ fields:
     display: "Knob Func 4"
   M:
     name: loop_status_rec
-    type: int
+    type: enum
     default: 0
     display: "Loop Status REC"
+    choices:
+      0: "OFF"
+      1: "RED"
+      2: "GREEN"
+      3: "AMBER"
+      4: "BLUE"
+      5: "PURPLE"
+      6: "CYAN"
+      7: "WHITE"
   N:
     name: loop_status_play
-    type: int
+    type: enum
     default: 0
     display: "Loop Status PLAY"
+    choices:
+      0: "OFF"
+      1: "RED"
+      2: "GREEN"
+      3: "AMBER"
+      4: "BLUE"
+      5: "PURPLE"
+      6: "CYAN"
+      7: "WHITE"
   O:
     name: loop_status_dub
-    type: int
+    type: enum
     default: 0
     display: "Loop Status DUB"
+    choices:
+      0: "OFF"
+      1: "RED"
+      2: "GREEN"
+      3: "AMBER"
+      4: "BLUE"
+      5: "PURPLE"
+      6: "CYAN"
+      7: "WHITE"
   P:
     name: loop_status_stop
-    type: int
+    type: enum
     default: 0
     display: "Loop Status STOP"
+    choices:
+      0: "OFF"
+      1: "RED"
+      2: "GREEN"
+      3: "AMBER"
+      4: "BLUE"
+      5: "PURPLE"
+      6: "CYAN"
+      7: "WHITE"
   Q:
     name: loop_status_blank
-    type: int
+    type: enum
     default: 0
     display: "Loop Status BLANK"
+    choices:
+      0: "OFF"
+      1: "RED"
+      2: "GREEN"
+      3: "AMBER"
+      4: "BLUE"
+      5: "PURPLE"
+      6: "CYAN"
+      7: "WHITE"
   # R-V: no corresponding menu item found — likely reserved/internal
   R:
     name: reserved_r

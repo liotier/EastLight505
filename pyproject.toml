@@ -45,6 +45,9 @@ dev = [
 [project.scripts]
 eastlight = "eastlight.cli.main:cli"
 
+[project.gui-scripts]
+eastlight-gui = "eastlight.gui:launch"
+
 [project.urls]
 Homepage = "https://github.com/liotier/EastLightRC-505mk2Librarian"
 Repository = "https://github.com/liotier/EastLightRC-505mk2Librarian"

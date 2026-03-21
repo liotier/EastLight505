@@ -1,11 +1,10 @@
 # Dump collection for schema gap filling
 
-## 1. CTL FUNC map (`ctl_func_map.txt`)
+## 1. CTL FUNC map — DONE
 
-Fill in the display name shown on the RC-505 MK2 screen for each integer value.
-Navigate to SYSTEM > CTRL on any controller, scroll through CTL FUNC values.
-
-Stop when the list wraps or no more entries appear.
+All 201 CTL FUNC values (0-200) mapped with push/hold/click sub-actions.
+Integrated into `src/eastlight/schema/ctl_func.yaml` and displayed by
+`ctl-show` and `ctl-set`.
 
 ## 2. SETUP unknown fields
 

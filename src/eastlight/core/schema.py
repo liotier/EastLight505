@@ -138,6 +138,59 @@ def load_fx_types(yaml_path: str | Path) -> FXTypeEnum:
     return enum
 
 
+@dataclass
+class CtlFuncEntry:
+    """A single CTL FUNC entry with optional sub-action detail."""
+
+    name: str
+    push: str = ""
+    hold: str = ""
+    click: str = ""
+
+
+class CtlFuncEnum:
+    """Mapping from CTL FUNC integer values to function names and sub-actions."""
+
+    def __init__(self) -> None:
+        self._entries: dict[int, CtlFuncEntry] = {}
+
+    def get(self, index: int) -> CtlFuncEntry | None:
+        """Get CTL FUNC entry by index."""
+        return self._entries.get(index)
+
+    def name(self, index: int) -> str | None:
+        """Get CTL FUNC display name by index."""
+        entry = self._entries.get(index)
+        return entry.name if entry else None
+
+    def __len__(self) -> int:
+        return len(self._entries)
+
+    def __contains__(self, index: int) -> bool:
+        return index in self._entries
+
+
+def load_ctl_func(yaml_path: str | Path) -> CtlFuncEnum:
+    """Load CTL FUNC enum from a YAML file."""
+    with open(yaml_path) as f:
+        raw = yaml.safe_load(f)
+
+    enum = CtlFuncEnum()
+    for index, entry_raw in raw.get("ctl_func", {}).items():
+        index = int(index)
+        if isinstance(entry_raw, str):
+            # Simple format: just a name string
+            enum._entries[index] = CtlFuncEntry(name=entry_raw)
+        elif isinstance(entry_raw, dict):
+            enum._entries[index] = CtlFuncEntry(
+                name=entry_raw.get("name", f"UNKNOWN({index})"),
+                push=entry_raw.get("push", ""),
+                hold=entry_raw.get("hold", ""),
+                click=entry_raw.get("click", ""),
+            )
+    return enum
+
+
 # Subslot prefixes: AA, AB, ..., DD (4 groups × 4 slots)
 _SUBSLOT_PREFIXES = frozenset(
     f"{g}{s}" for g in "ABCD" for s in "ABCD"
@@ -152,6 +205,7 @@ class SchemaRegistry:
         self._instance_map: dict[str, SectionSchema] = {}  # "TRACK1" → track schema
         self._fx_effect_schemas: dict[str, SectionSchema] = {}  # "LPF" → effect schema
         self.fx_types: FXTypeEnum = FXTypeEnum()
+        self.ctl_func: CtlFuncEnum = CtlFuncEnum()
 
     def register(self, schema: SectionSchema) -> None:
         """Register a section schema."""
@@ -210,6 +264,9 @@ class SchemaRegistry:
         for yaml_file in sorted(schema_dir.glob("*.yaml")):
             if yaml_file.name == "fx_types.yaml":
                 self.fx_types = load_fx_types(yaml_file)
+                continue
+            if yaml_file.name == "ctl_func.yaml":
+                self.ctl_func = load_ctl_func(yaml_file)
                 continue
             schema = load_schema_from_yaml(yaml_file)
             self.register(schema)

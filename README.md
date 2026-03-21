@@ -144,6 +144,8 @@ eastlight ctl-set ICTL1_PEDAL1 ctl_mode 0
 Internal controllers (ICTL): 47 panel button and pedal assignments across 3 banks.
 External controllers (ECTL): 6 MIDI CC inputs (CTL1-4, EXP1-2).
 
+All 201 CTL FUNC values (0-200) are mapped to their display names with push/hold/click sub-actions. `ctl-show` resolves function indices to human-readable names; `ctl-set` shows old and new function names when changing assignments.
+
 ### Backup management
 
 ```
@@ -212,9 +214,10 @@ src/eastlight/
     wav.py         32-bit float WAV import/export via libsndfile
     config.py      User config, device auto-detection, dir resolution
   schema/
-    *.yaml         24 section schemas (track, master, assign, routing, ...)
+    *.yaml         24 section schemas + ctl_func enum (201 entries)
     effects/       70 FX effect type schemas
     fx_types.yaml  FX type index enum (IFX 0-65, TFX 0-69)
+    ctl_func.yaml  CTL FUNC enum (0-200) with sub-actions
   cli/
     main.py        Click-based CLI (25 commands)
 ```
@@ -228,8 +231,9 @@ src/eastlight/
 - FX type index enum with reverse lookup
 - System settings (SETUP, PREF, COLOR, USB, MIDI)
 - All 53 ICTL + 6 ECTL controller mapping sections
+- All 201 CTL FUNC values (0-200) with push/hold/click sub-actions
 
-Remaining gaps: CTL FUNC display names (200+ entries), 13 internal SETUP fields.
+Remaining gaps: 13 SETUP fields (J-V), 6 PREF fields (O-T).
 
 ## Development
 

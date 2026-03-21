@@ -1221,6 +1221,8 @@ def ctl_show(
 
 def _show_ctl_sections(sys_elem, registry, prefix: str, raw: bool) -> None:
     """Display controller sections matching a prefix."""
+    ctl_func = registry.ctl_func
+
     table = Table(show_header=True)
     table.add_column("Section", style="cyan", min_width=24)
     table.add_column("Tag", style="dim", width=4)
@@ -1250,6 +1252,9 @@ def _show_ctl_sections(sys_elem, registry, prefix: str, raw: bool) -> None:
                     param_name = fd.display or fd.name
                     if fd.choices and value in fd.choices:
                         display_val = fd.choices[value]
+                    elif fd.name in ("ctl_func", "ctl_func_long", "ctl_func_secondary"):
+                        func_name = ctl_func.name(value)
+                        display_val = func_name if func_name else str(value)
                     else:
                         display_val = str(value)
                 else:
@@ -1333,17 +1338,27 @@ def ctl_set(
     if schema and tag != param_name:
         display_name = f"{param_name} ({tag})"
 
+    # Resolve CTL FUNC names for display
+    ctl_func_names = {"ctl_func", "ctl_func_long", "ctl_func_secondary"}
+    resolved_param = schema.fields.get(tag).name if schema and schema.fields.get(tag) else param_name
+    func_detail = ""
+    if resolved_param in ctl_func_names:
+        ctl_func = registry.ctl_func
+        old_fn = ctl_func.name(old_value) or str(old_value)
+        new_fn = ctl_func.name(value) or str(value)
+        func_detail = f" ({old_fn} → {new_fn})"
+
     if dry_run:
         console.print(
             f"[dim](dry-run)[/dim] {section_name}.{display_name}: "
-            f"{old_value} → {value}"
+            f"{old_value} → {value}{func_detail}"
         )
     else:
         sec[tag] = value
         lib.save_system(rc0, var_int)
         console.print(
             f"[green]Set[/green] {section_name}.{display_name}: "
-            f"{old_value} → {value}"
+            f"{old_value} → {value}{func_detail}"
         )
 
 

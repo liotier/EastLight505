@@ -1,0 +1,706 @@
+# RC-505 MK2 CTL FUNC enum — maps integer values to function names.
+#
+# Each entry also has sub-actions (push/hold/click) documenting what
+# the controller does in each interaction mode.
+#
+# Source: manual transcription from device UI (firmware v1.x).
+
+ctl_func:
+  0:
+    name: "OFF"
+  # ── Track 1 ──────────────────────────────────────────────────
+  1:
+    name: "TRK1 REC/PLAY 1"
+    push: "REC/PLAY"
+  2:
+    name: "TRK1 REC/PLAY 2"
+    push: "REC/PLAY"
+    hold: "UNDO(PLAY)"
+  3:
+    name: "TRK1 REC/PLAY 3"
+    push: "REC/PLAY"
+    hold: "UNDO(PLAY)"
+    click: "STOP"
+  4:
+    name: "TRK1 REC/PLAY 4"
+    push: "REC/PLAY"
+    hold: "UNDO,CLEAR"
+    click: "STOP"
+  5:
+    name: "TRK1 MOMENT PLAY"
+    push: "PLAY"
+  6:
+    name: "TRK1 PLAY/STOP 1"
+    push: "PLAY/STOP"
+  7:
+    name: "TRK1 PLAY/STOP 2"
+    push: "REC/PLAY"
+    hold: "UNDO(PLAY)"
+  8:
+    name: "TRK1 PLAY/STOP 3"
+    push: "REC/PLAY"
+    hold: "UNDO,CLEAR"
+  9:
+    name: "TRK1 STOP 1"
+    push: "STOP"
+  10:
+    name: "TRK1 STOP 2"
+    push: "STOP"
+    click: "TAP TEMPO"
+  11:
+    name: "TRK1 STOP 3"
+    push: "STOP"
+    hold: "CLEAR"
+    click: "TAP TEMPO"
+  12:
+    name: "TRK1 STOP 5"
+    push: "STOP"
+    click: "CLEAR"
+  13:
+    name: "TRK1 CLEAR"
+    push: "CLEAR"
+  14:
+    name: "TRK1 REVERSE"
+    push: "REVERSE"
+  15:
+    name: "TRK1 UNDO/REDO"
+    push: "UNDO"
+  16:
+    name: "TRK1 MARK BACK 1"
+    push: "MARK BACK"
+  17:
+    name: "TRK1 MARK BACK 2"
+    push: "MARK BACK"
+    hold: "REC BACK"
+  18:
+    name: "TRK1 REC BACK"
+    push: "REC BACK"
+  19:
+    name: "TRK1 MARK SET 1"
+    push: "MARK SET"
+  20:
+    name: "TRK1 MARK SET 2"
+    push: "MARK SET"
+    hold: "MARK CLEAR"
+  21:
+    name: "TRK1 MARK CLEAR"
+    push: "MARK CLEAR"
+  22:
+    name: "TRK1 HALF SPEED"
+    push: "HALF SPEED"
+  23:
+    name: "TRK1 HALF SPEED (MOMENT)"
+    push: "HALF SPEED"
+  24:
+    name: "TRK1 DOUBLE SPEED"
+    push: "DOUBLE SPEED"
+  25:
+    name: "TRK1 DOUBLE SPEED (MOMENT)"
+    push: "DOUBLE SPEED"
+  26:
+    name: "TRK1 TRACK EDIT"
+    push: "TRACK EDIT"
+  27:
+    name: "TRK1 TRACK FX"
+    push: "FX ON/OFF"
+  # ── Track 2 ──────────────────────────────────────────────────
+  28:
+    name: "TRK2 REC/PLAY 1"
+    push: "REC/PLAY"
+  29:
+    name: "TRK2 REC/PLAY 2"
+    push: "REC/PLAY"
+    hold: "UNDO(PLAY)"
+  30:
+    name: "TRK2 REC/PLAY 3"
+    push: "REC/PLAY"
+    hold: "UNDO(PLAY)"
+    click: "STOP"
+  31:
+    name: "TRK2 REC/PLAY 4"
+    push: "REC/PLAY"
+    hold: "UNDO,CLEAR"
+    click: "STOP"
+  32:
+    name: "TRK2 MOMENT PLAY"
+    push: "PLAY"
+  33:
+    name: "TRK2 PLAY/STOP 1"
+    push: "PLAY/STOP"
+  34:
+    name: "TRK2 PLAY/STOP 2"
+    push: "REC/PLAY"
+    hold: "UNDO(PLAY)"
+  35:
+    name: "TRK2 PLAY/STOP 3"
+    push: "REC/PLAY"
+    hold: "UNDO,CLEAR"
+  36:
+    name: "TRK2 STOP 1"
+    push: "STOP"
+  37:
+    name: "TRK2 STOP 2"
+    push: "STOP"
+    click: "TAP TEMPO"
+  38:
+    name: "TRK2 STOP 3"
+    push: "STOP"
+    hold: "CLEAR"
+    click: "TAP TEMPO"
+  39:
+    name: "TRK2 STOP 5"
+    push: "STOP"
+    click: "CLEAR"
+  40:
+    name: "TRK2 CLEAR"
+    push: "CLEAR"
+  41:
+    name: "TRK2 REVERSE"
+    push: "REVERSE"
+  42:
+    name: "TRK2 UNDO/REDO"
+    push: "UNDO"
+  43:
+    name: "TRK2 MARK BACK 1"
+    push: "MARK BACK"
+  44:
+    name: "TRK2 MARK BACK 2"
+    push: "MARK BACK"
+    hold: "REC BACK"
+  45:
+    name: "TRK2 REC BACK"
+    push: "REC BACK"
+  46:
+    name: "TRK2 MARK SET 1"
+    push: "MARK SET"
+  47:
+    name: "TRK2 MARK SET 2"
+    push: "MARK SET"
+    hold: "MARK CLEAR"
+  48:
+    name: "TRK2 MARK CLEAR"
+    push: "MARK CLEAR"
+  49:
+    name: "TRK2 HALF SPEED"
+    push: "HALF SPEED"
+  50:
+    name: "TRK2 HALF SPEED (MOMENT)"
+    push: "HALF SPEED"
+  51:
+    name: "TRK2 DOUBLE SPEED"
+    push: "DOUBLE SPEED"
+  52:
+    name: "TRK2 DOUBLE SPEED (MOMENT)"
+    push: "DOUBLE SPEED"
+  53:
+    name: "TRK2 TRACK EDIT"
+    push: "TRACK EDIT"
+  54:
+    name: "TRK2 TRACK FX"
+    push: "FX ON/OFF"
+  # ── Track 3 ──────────────────────────────────────────────────
+  55:
+    name: "TRK3 REC/PLAY 1"
+    push: "REC/PLAY"
+  56:
+    name: "TRK3 REC/PLAY 2"
+    push: "REC/PLAY"
+    hold: "UNDO(PLAY)"
+  57:
+    name: "TRK3 REC/PLAY 3"
+    push: "REC/PLAY"
+    hold: "UNDO(PLAY)"
+    click: "STOP"
+  58:
+    name: "TRK3 REC/PLAY 4"
+    push: "REC/PLAY"
+    hold: "UNDO,CLEAR"
+    click: "STOP"
+  59:
+    name: "TRK3 MOMENT PLAY"
+    push: "PLAY"
+  60:
+    name: "TRK3 PLAY/STOP 1"
+    push: "PLAY/STOP"
+  61:
+    name: "TRK3 PLAY/STOP 2"
+    push: "REC/PLAY"
+    hold: "UNDO(PLAY)"
+  62:
+    name: "TRK3 PLAY/STOP 3"
+    push: "REC/PLAY"
+    hold: "UNDO,CLEAR"
+  63:
+    name: "TRK3 STOP 1"
+    push: "STOP"
+  64:
+    name: "TRK3 STOP 2"
+    push: "STOP"
+    click: "TAP TEMPO"
+  65:
+    name: "TRK3 STOP 3"
+    push: "STOP"
+    hold: "CLEAR"
+    click: "TAP TEMPO"
+  66:
+    name: "TRK3 STOP 5"
+    push: "STOP"
+    click: "CLEAR"
+  67:
+    name: "TRK3 CLEAR"
+    push: "CLEAR"
+  68:
+    name: "TRK3 REVERSE"
+    push: "REVERSE"
+  69:
+    name: "TRK3 UNDO/REDO"
+    push: "UNDO"
+  70:
+    name: "TRK3 MARK BACK 1"
+    push: "MARK BACK"
+  71:
+    name: "TRK3 MARK BACK 2"
+    push: "MARK BACK"
+    hold: "REC BACK"
+  72:
+    name: "TRK3 REC BACK"
+    push: "REC BACK"
+  73:
+    name: "TRK3 MARK SET 1"
+    push: "MARK SET"
+  74:
+    name: "TRK3 MARK SET 2"
+    push: "MARK SET"
+    hold: "MARK CLEAR"
+  75:
+    name: "TRK3 MARK CLEAR"
+    push: "MARK CLEAR"
+  76:
+    name: "TRK3 HALF SPEED"
+    push: "HALF SPEED"
+  77:
+    name: "TRK3 HALF SPEED (MOMENT)"
+    push: "HALF SPEED"
+  78:
+    name: "TRK3 DOUBLE SPEED"
+    push: "DOUBLE SPEED"
+  79:
+    name: "TRK3 DOUBLE SPEED (MOMENT)"
+    push: "DOUBLE SPEED"
+  80:
+    name: "TRK3 TRACK EDIT"
+    push: "TRACK EDIT"
+  81:
+    name: "TRK3 TRACK FX"
+    push: "FX ON/OFF"
+  # ── Track 4 ──────────────────────────────────────────────────
+  82:
+    name: "TRK4 REC/PLAY 1"
+    push: "REC/PLAY"
+  83:
+    name: "TRK4 REC/PLAY 2"
+    push: "REC/PLAY"
+    hold: "UNDO(PLAY)"
+  84:
+    name: "TRK4 REC/PLAY 3"
+    push: "REC/PLAY"
+    hold: "UNDO(PLAY)"
+    click: "STOP"
+  85:
+    name: "TRK4 REC/PLAY 4"
+    push: "REC/PLAY"
+    hold: "UNDO,CLEAR"
+    click: "STOP"
+  86:
+    name: "TRK4 MOMENT PLAY"
+    push: "PLAY"
+  87:
+    name: "TRK4 PLAY/STOP 1"
+    push: "PLAY/STOP"
+  88:
+    name: "TRK4 PLAY/STOP 2"
+    push: "REC/PLAY"
+    hold: "UNDO(PLAY)"
+  89:
+    name: "TRK4 PLAY/STOP 3"
+    push: "REC/PLAY"
+    hold: "UNDO,CLEAR"
+  90:
+    name: "TRK4 STOP 1"
+    push: "STOP"
+  91:
+    name: "TRK4 STOP 2"
+    push: "STOP"
+    click: "TAP TEMPO"
+  92:
+    name: "TRK4 STOP 3"
+    push: "STOP"
+    hold: "CLEAR"
+    click: "TAP TEMPO"
+  93:
+    name: "TRK4 STOP 5"
+    push: "STOP"
+    click: "CLEAR"
+  94:
+    name: "TRK4 CLEAR"
+    push: "CLEAR"
+  95:
+    name: "TRK4 REVERSE"
+    push: "REVERSE"
+  96:
+    name: "TRK4 UNDO/REDO"
+    push: "UNDO"
+  97:
+    name: "TRK4 MARK BACK 1"
+    push: "MARK BACK"
+  98:
+    name: "TRK4 MARK BACK 2"
+    push: "MARK BACK"
+    hold: "REC BACK"
+  99:
+    name: "TRK4 REC BACK"
+    push: "REC BACK"
+  100:
+    name: "TRK4 MARK SET 1"
+    push: "MARK SET"
+  101:
+    name: "TRK4 MARK SET 2"
+    push: "MARK SET"
+    hold: "MARK CLEAR"
+  102:
+    name: "TRK4 MARK CLEAR"
+    push: "MARK CLEAR"
+  103:
+    name: "TRK4 HALF SPEED"
+    push: "HALF SPEED"
+  104:
+    name: "TRK4 HALF SPEED (MOMENT)"
+    push: "HALF SPEED"
+  105:
+    name: "TRK4 DOUBLE SPEED"
+    push: "DOUBLE SPEED"
+  106:
+    name: "TRK4 DOUBLE SPEED (MOMENT)"
+    push: "DOUBLE SPEED"
+  107:
+    name: "TRK4 TRACK EDIT"
+    push: "TRACK EDIT"
+  108:
+    name: "TRK4 TRACK FX"
+    push: "FX ON/OFF"
+  # ── Track 5 ──────────────────────────────────────────────────
+  109:
+    name: "TRK5 REC/PLAY 1"
+    push: "REC/PLAY"
+  110:
+    name: "TRK5 REC/PLAY 2"
+    push: "REC/PLAY"
+    hold: "UNDO(PLAY)"
+  111:
+    name: "TRK5 REC/PLAY 3"
+    push: "REC/PLAY"
+    hold: "UNDO(PLAY)"
+    click: "STOP"
+  112:
+    name: "TRK5 REC/PLAY 4"
+    push: "REC/PLAY"
+    hold: "UNDO,CLEAR"
+    click: "STOP"
+  113:
+    name: "TRK5 MOMENT PLAY"
+    push: "PLAY"
+  114:
+    name: "TRK5 PLAY/STOP 1"
+    push: "PLAY/STOP"
+  115:
+    name: "TRK5 PLAY/STOP 2"
+    push: "REC/PLAY"
+    hold: "UNDO(PLAY)"
+  116:
+    name: "TRK5 PLAY/STOP 3"
+    push: "REC/PLAY"
+    hold: "UNDO,CLEAR"
+  117:
+    name: "TRK5 STOP 1"
+    push: "STOP"
+  118:
+    name: "TRK5 STOP 2"
+    push: "STOP"
+    click: "TAP TEMPO"
+  119:
+    name: "TRK5 STOP 3"
+    push: "STOP"
+    hold: "CLEAR"
+    click: "TAP TEMPO"
+  120:
+    name: "TRK5 STOP 5"
+    push: "STOP"
+    click: "CLEAR"
+  121:
+    name: "TRK5 CLEAR"
+    push: "CLEAR"
+  122:
+    name: "TRK5 REVERSE"
+    push: "REVERSE"
+  123:
+    name: "TRK5 UNDO/REDO"
+    push: "UNDO"
+  124:
+    name: "TRK5 MARK BACK 1"
+    push: "MARK BACK"
+  125:
+    name: "TRK5 MARK BACK 2"
+    push: "MARK BACK"
+    hold: "REC BACK"
+  126:
+    name: "TRK5 REC BACK"
+    push: "REC BACK"
+  127:
+    name: "TRK5 MARK SET 1"
+    push: "MARK SET"
+  128:
+    name: "TRK5 MARK SET 2"
+    push: "MARK SET"
+    hold: "MARK CLEAR"
+  129:
+    name: "TRK5 MARK CLEAR"
+    push: "MARK CLEAR"
+  130:
+    name: "TRK5 HALF SPEED"
+    push: "HALF SPEED"
+  131:
+    name: "TRK5 HALF SPEED (MOMENT)"
+    push: "HALF SPEED"
+  132:
+    name: "TRK5 DOUBLE SPEED"
+    push: "DOUBLE SPEED"
+  133:
+    name: "TRK5 DOUBLE SPEED (MOMENT)"
+    push: "DOUBLE SPEED"
+  134:
+    name: "TRK5 TRACK EDIT"
+    push: "TRACK EDIT"
+  135:
+    name: "TRK5 TRACK FX"
+    push: "FX ON/OFF"
+  # ── Current Track ────────────────────────────────────────────
+  136:
+    name: "CUR.TRK REC/PLAY 1"
+    push: "REC/PLAY"
+  137:
+    name: "CUR.TRK REC/PLAY 2"
+    push: "REC/PLAY"
+    hold: "UNDO(PLAY)"
+  138:
+    name: "CUR.TRK REC/PLAY 3"
+    push: "REC/PLAY"
+    hold: "UNDO(PLAY)"
+    click: "STOP"
+  139:
+    name: "CUR.TRK REC/PLAY 4"
+    push: "REC/PLAY"
+    hold: "UNDO,CLEAR"
+    click: "STOP"
+  140:
+    name: "CUR.TRK MOMENT PLAY"
+    push: "PLAY"
+  141:
+    name: "CUR.TRK PLAY/STOP 1"
+    push: "PLAY/STOP"
+  142:
+    name: "CUR.TRK PLAY/STOP 2"
+    push: "REC/PLAY"
+    hold: "UNDO(PLAY)"
+  143:
+    name: "CUR.TRK PLAY/STOP 3"
+    push: "REC/PLAY"
+    hold: "UNDO,CLEAR"
+  144:
+    name: "CUR.TRK STOP 1"
+    push: "STOP"
+  145:
+    name: "CUR.TRK STOP 2"
+    push: "STOP"
+    click: "TAP TEMPO"
+  146:
+    name: "CUR.TRK STOP 3"
+    push: "STOP"
+    hold: "CLEAR"
+    click: "TAP TEMPO"
+  147:
+    name: "CUR.TRK STOP 5"
+    push: "STOP"
+    click: "CLEAR"
+  148:
+    name: "CUR.TRK CLEAR"
+    push: "CLEAR"
+  149:
+    name: "CUR.TRK REVERSE"
+    push: "REVERSE"
+  150:
+    name: "CUR.TRK UNDO/REDO"
+    push: "UNDO"
+  151:
+    name: "CUR.TRK MARK BACK 1"
+    push: "MARK BACK"
+  152:
+    name: "CUR.TRK MARK BACK 2"
+    push: "MARK BACK"
+    hold: "REC BACK"
+  153:
+    name: "CUR.TRK REC BACK"
+    push: "REC BACK"
+  154:
+    name: "CUR.TRK MARK SET 1"
+    push: "MARK SET"
+  155:
+    name: "CUR.TRK MARK SET 2"
+    push: "MARK SET"
+    hold: "MARK CLEAR"
+  156:
+    name: "CUR.TRK MARK CLEAR"
+    push: "MARK CLEAR"
+  157:
+    name: "CUR.TRK HALF SPEED"
+    push: "HALF SPEED"
+  158:
+    name: "CUR.TRK HALF SPEED (MOMENT)"
+    push: "HALF SPEED"
+  159:
+    name: "CUR.TRK DOUBLE SPEED"
+    push: "DOUBLE SPEED"
+  160:
+    name: "CUR.TRK DOUBLE SPEED (MOMENT)"
+    push: "DOUBLE SPEED"
+  161:
+    name: "CUR.TRK TRACK EDIT"
+    push: "TRACK EDIT"
+  162:
+    name: "CUR.TRK TRACK FX"
+    push: "FX ON/OFF"
+  163:
+    name: "CUR.TRK INC 1"
+    push: "INC"
+    hold: "INC"
+  164:
+    name: "CUR.TRK DEC 1"
+    push: "DEC"
+    hold: "DEC"
+  165:
+    name: "CUR.TRK DEC 2"
+    push: "DEC"
+    hold: "INC"
+  166:
+    name: "CUR.TRK NUM"
+  # ── Global functions ─────────────────────────────────────────
+  167:
+    name: "ALL START/STOP 1"
+    push: "ALL START/STOP"
+  168:
+    name: "ALL START/STOP 2"
+    push: "ALL START/STOP"
+    hold: "ALL CLEAR"
+  169:
+    name: "ALL START/STOP 3"
+    push: "ALL START/STOP"
+    click: "ALL CLEAR"
+  170:
+    name: "ALL START/STOP 4"
+    push: "IMM ALL ST/STP"
+  171:
+    name: "ALL START/STOP 5"
+    push: "IMM ALL ST/STP"
+    hold: "ALL CLEAR"
+  172:
+    name: "ALL START/STOP 6"
+    push: "IMM ALL ST/STP"
+    click: "ALL CLEAR"
+  173:
+    name: "ALL CLEAR 1"
+    push: "ALL CLEAR"
+  174:
+    name: "ALL CLEAR 2"
+    hold: "ALL CLEAR"
+  175:
+    name: "TAP TEMPO"
+    push: "TAP TEMPO"
+    hold: "TEMPO REVERT"
+  176:
+    name: "TEMPO UP"
+    push: "TEMPO DOUBLE"
+  177:
+    name: "TEMPO DOWN"
+    push: "TEMPO HALF"
+  178:
+    name: "INPUT FX"
+    push: "FX ON/OFF"
+  179:
+    name: "INPUT FX A"
+    push: "FX ON/OFF"
+  180:
+    name: "INPUT FX B"
+    push: "FX ON/OFF"
+  181:
+    name: "INPUT FX C"
+    push: "FX ON/OFF"
+  182:
+    name: "INPUT FX D"
+    push: "FX ON/OFF"
+  183:
+    name: "INPUT FX CUR"
+    push: "FX ON/OFF"
+  184:
+    name: "TRACK FX"
+    push: "FX ON/OFF"
+  185:
+    name: "TRACK FX A"
+    push: "FX ON/OFF"
+  186:
+    name: "TRACK FX B"
+    push: "FX ON/OFF"
+  187:
+    name: "TRACK FX C"
+    push: "FX ON/OFF"
+  188:
+    name: "TRACK FX D"
+    push: "FX ON/OFF"
+  189:
+    name: "TRACK FX CUR"
+    push: "FX ON/OFF"
+  190:
+    name: "RHYTHM START/STOP"
+    push: "RHY START/STOP"
+  191:
+    name: "RHYTHM START"
+    push: "RHYTHM START"
+  192:
+    name: "RHYTHM STOP"
+    push: "RHYTHM STOP"
+  193:
+    name: "MEMORY INC 1"
+    push: "INC"
+    hold: "INC"
+  194:
+    name: "MEMORY INC 2"
+    push: "INC"
+    hold: "DEC"
+  195:
+    name: "MEMORY DEC 1"
+    push: "DEC"
+    hold: "DEC"
+  196:
+    name: "MEMORY DEC 2"
+    push: "DEC"
+    hold: "INC"
+  197:
+    name: "MEMORY WRITE"
+    push: "WRITE"
+  198:
+    name: "MIC IN MUTE"
+    push: "MUTE ON/OFF"
+  199:
+    name: "MIC 1 IN MUTE"
+    push: "MUTE ON/OFF"
+  200:
+    name: "MIC 2 IN MUTE"
+    push: "MUTE ON/OFF"

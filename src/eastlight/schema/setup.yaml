@@ -56,11 +56,11 @@ fields:
       0: "DIRECT"
       1: "TOGGLE"
   H:
-    name: knob_func
+    name: knob_func_1
     type: int
     range: [0, 50]
     default: 2
-    display: "Knob Function"
+    display: "Knob Func 1"
   I:
     name: memory_extent_min
     type: int
@@ -68,67 +68,121 @@ fields:
     default: 0
     display: "Memory Extent Min"
   J:
-    name: unknown_j
+    name: knob_func_2
     type: int
+    range: [0, 50]
     default: 1
-    display: "(unknown J)"
+    display: "Knob Func 2"
   K:
-    name: unknown_k
+    name: knob_func_3
     type: int
+    range: [0, 50]
     default: 0
-    display: "(unknown K)"
+    display: "Knob Func 3"
   L:
-    name: unknown_l
+    name: knob_func_4
     type: int
+    range: [0, 50]
     default: 0
-    display: "(unknown L)"
+    display: "Knob Func 4"
   M:
-    name: unknown_m
-    type: int
+    name: loop_status_rec
+    type: enum
     default: 0
-    display: "(unknown M)"
+    display: "Loop Status REC"
+    choices:
+      0: "OFF"
+      1: "RED"
+      2: "GREEN"
+      3: "AMBER"
+      4: "BLUE"
+      5: "PURPLE"
+      6: "CYAN"
+      7: "WHITE"
   N:
-    name: unknown_n
-    type: int
+    name: loop_status_play
+    type: enum
     default: 0
-    display: "(unknown N)"
+    display: "Loop Status PLAY"
+    choices:
+      0: "OFF"
+      1: "RED"
+      2: "GREEN"
+      3: "AMBER"
+      4: "BLUE"
+      5: "PURPLE"
+      6: "CYAN"
+      7: "WHITE"
   O:
-    name: unknown_o
-    type: int
+    name: loop_status_dub
+    type: enum
     default: 0
-    display: "(unknown O)"
+    display: "Loop Status DUB"
+    choices:
+      0: "OFF"
+      1: "RED"
+      2: "GREEN"
+      3: "AMBER"
+      4: "BLUE"
+      5: "PURPLE"
+      6: "CYAN"
+      7: "WHITE"
   P:
-    name: unknown_p
-    type: int
+    name: loop_status_stop
+    type: enum
     default: 0
-    display: "(unknown P)"
+    display: "Loop Status STOP"
+    choices:
+      0: "OFF"
+      1: "RED"
+      2: "GREEN"
+      3: "AMBER"
+      4: "BLUE"
+      5: "PURPLE"
+      6: "CYAN"
+      7: "WHITE"
   Q:
-    name: unknown_q
-    type: int
+    name: loop_status_blank
+    type: enum
     default: 0
-    display: "(unknown Q)"
+    display: "Loop Status BLANK"
+    choices:
+      0: "OFF"
+      1: "RED"
+      2: "GREEN"
+      3: "AMBER"
+      4: "BLUE"
+      5: "PURPLE"
+      6: "CYAN"
+      7: "WHITE"
+  # R-V: no corresponding menu item found — likely reserved/internal
   R:
-    name: unknown_r
+    name: reserved_r
     type: int
     default: 0
-    display: "(unknown R)"
+    display: "(reserved R)"
+    read_only: true
   S:
-    name: unknown_s
+    name: reserved_s
     type: int
     default: 0
-    display: "(unknown S)"
+    display: "(reserved S)"
+    read_only: true
   T:
-    name: unknown_t
+    name: reserved_t
     type: int
     default: 0
-    display: "(unknown T)"
+    display: "(reserved T)"
+    read_only: true
   U:
-    name: unknown_u
+    name: reserved_u
     type: int
     default: 0
-    display: "(unknown U)"
+    display: "(reserved U)"
+    read_only: true
   V:
-    name: unknown_v
+    name: reserved_v
     type: int
     default: 0
-    display: "(unknown V)"
+    display: "(reserved V)"
+    read_only: true

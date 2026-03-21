@@ -312,6 +312,63 @@ class TestCtlSet:
         assert "not found" in result.output
 
 
+# --- CTL FUNC enum ---
+
+
+class TestCtlFuncEnum:
+    def test_load_ctl_func(self) -> None:
+        """Verify CTL FUNC enum loads from schema YAML."""
+        from eastlight.core.schema import SchemaRegistry
+        registry = SchemaRegistry()
+        registry.load_all()
+        assert len(registry.ctl_func) == 201  # 0-200
+
+    def test_ctl_func_names(self) -> None:
+        from eastlight.core.schema import SchemaRegistry
+        registry = SchemaRegistry()
+        registry.load_all()
+        assert registry.ctl_func.name(0) == "OFF"
+        assert registry.ctl_func.name(1) == "TRK1 REC/PLAY 1"
+        assert registry.ctl_func.name(42) == "TRK2 UNDO/REDO"
+        assert registry.ctl_func.name(175) == "TAP TEMPO"
+        assert registry.ctl_func.name(200) == "MIC 2 IN MUTE"
+        assert registry.ctl_func.name(999) is None
+
+    def test_ctl_func_sub_actions(self) -> None:
+        from eastlight.core.schema import SchemaRegistry
+        registry = SchemaRegistry()
+        registry.load_all()
+        entry = registry.ctl_func.get(3)
+        assert entry is not None
+        assert entry.name == "TRK1 REC/PLAY 3"
+        assert entry.push == "REC/PLAY"
+        assert entry.hold == "UNDO(PLAY)"
+        assert entry.click == "STOP"
+
+    def test_ctl_show_resolves_func_name(
+        self, runner: CliRunner, ctl_roland_dir: Path
+    ) -> None:
+        """ctl-show should display CTL FUNC names in the Display column."""
+        result = runner.invoke(
+            cli, ["ctl-show", "-d", str(ctl_roland_dir), "--type", "ictl"]
+        )
+        assert result.exit_code == 0
+        # ICTL1_TRACK1_FX has A=42 which is "TRK2 UNDO/REDO"
+        assert "TRK2 UNDO/REDO" in result.output
+
+    def test_ctl_set_shows_func_name(
+        self, runner: CliRunner, ctl_roland_dir: Path
+    ) -> None:
+        """ctl-set should display old/new CTL FUNC names."""
+        result = runner.invoke(
+            cli,
+            ["ctl-set", "ICTL1_TRACK1_FX", "ctl_func", "175", "-d", str(ctl_roland_dir)],
+        )
+        assert result.exit_code == 0
+        assert "TRK2 UNDO/REDO" in result.output  # old (42)
+        assert "TAP TEMPO" in result.output  # new (175)
+
+
 # --- PyPI packaging ---
 
 

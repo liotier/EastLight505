@@ -3,11 +3,17 @@
 # Instructions:
 # On the RC-505 MK2, go to SYSTEM > CTRL and pick any controller.
 # Scroll through the CTL FUNC values and write the display name next
-# to each number below. Skip lines that are already filled if correct.
+# to each number below.
 #
-# Format:  integer = DISPLAY NAME
-# Example: 0 = OFF
-#          1 = IFX A:A SW
+# Format:  integer = DISPLAY NAME | PUSH: ... | HOLD: ... | CLICK: ...
+#
+# Example:
+#   0 = OFF
+#   42 = IFX A:A SW | PUSH: toggle on/off | HOLD: momentary on | CLICK: n/a
+#
+# PUSH/HOLD/CLICK detail is optional on the first pass — just the name
+# is already very useful. The sub-actions can be filled in later or
+# pulled from the manual's CTL FUNC reference table.
 #
 # The max value appears to be around 200-300. Stop when the device
 # wraps around or shows no more entries.

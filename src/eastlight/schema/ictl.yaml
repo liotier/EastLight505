@@ -53,13 +53,13 @@ fields:
   A:
     name: ctl_func
     type: int
-    range: [0, 300]
+    range: [0, 200]
     default: 0
     display: "CTL Function"
   B:
     name: ctl_func_long
     type: int
-    range: [0, 300]
+    range: [0, 200]
     default: 0
     display: "Long Press Function"
   C:

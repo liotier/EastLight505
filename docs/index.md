@@ -1,14 +1,15 @@
 # EastLight
 
-Open-source **command-line** editor/librarian for the **Roland RC-505 MK2** loop station.
+Open-source editor/librarian for the **Roland RC-505 MK2** loop station — CLI and GUI.
 
-EastLight reads and writes the RC-505 MK2's SD card backup format (`ROLAND/` directory), giving you full control over memory patches, audio tracks, effects, and system settings from the terminal.
+EastLight reads and writes the RC-505 MK2's SD card backup format (`ROLAND/` directory), giving you full control over memory patches, audio tracks, effects, and system settings from the terminal or from a graphical interface.
 
-!!! warning "Alpha release (v0.1.0)"
-    The file format parser achieves byte-for-byte round-trip fidelity and ~98% schema coverage, but the CLI interface and edge cases are still maturing. **Back up your SD card before using EastLight on real data.**
+!!! warning "Alpha release (v0.2.0)"
+    The file format parser achieves byte-for-byte round-trip fidelity and ~98% schema coverage, but the interface and edge cases are still maturing. **Back up your SD card before using EastLight on real data.**
 
 ## Features
 
+- **Graphical interface** — PyQt6 GUI with memory browser, parameter editor, and system settings
 - **Browse and edit** all 99 memory slots — parameters, names, effects, system settings
 - **Copy, swap, clear** memories with automatic backup
 - **Batch operations** — apply changes across multiple memories at once
@@ -44,9 +45,9 @@ eastlight wav-import 1 2 recording.wav
 
 ## What's next
 
-- Graphical interface (PyQt6) — planned for a future release
 - Full schema coverage for remaining system fields
 - Rhythm pattern editing
+- Waveform display and drag-and-drop in GUI
 
 ## License
 

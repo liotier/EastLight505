@@ -84,6 +84,16 @@ def cli() -> None:
     """EastLight — RC-505 MK2 editor/librarian."""
 
 
+@cli.command("gui")
+@click.option("--dir", "-d", "roland_dir", type=click.Path(file_okay=False),
+              default=None, help="ROLAND/ directory (default: config or auto-detect)")
+def gui_cmd(roland_dir: str | None) -> None:
+    """Launch the graphical user interface."""
+    from eastlight.gui import launch
+
+    raise SystemExit(launch(roland_dir))
+
+
 @cli.command("list")
 @click.option("--dir", "-d", "roland_dir", type=click.Path(file_okay=False),
               default=None, help="ROLAND/ directory (default: config or auto-detect)")

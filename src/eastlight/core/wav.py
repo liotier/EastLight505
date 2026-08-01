@@ -176,3 +176,25 @@ def wav_overview(path: str | Path, num_points: int = 1000) -> np.ndarray:
             overview[i, 1] = mono.max()
 
     return overview
+
+
+def save_overview(path: str | Path, overview: np.ndarray) -> None:
+    """Save a waveform overview array (from wav_overview) to a cache file.
+
+    Args:
+        path: Destination path (parent directory must already exist).
+        overview: Array as returned by wav_overview().
+    """
+    np.save(str(path), overview)
+
+
+def load_overview(path: str | Path) -> np.ndarray:
+    """Load a waveform overview array previously written by save_overview().
+
+    Args:
+        path: Path to the cached overview file.
+
+    Returns:
+        Array of shape (num_points, 2) with [min, max] per segment.
+    """
+    return np.load(str(path), allow_pickle=False)

@@ -155,6 +155,8 @@ eastlight wav-import 1 2 recording.wav
 
 Supported import formats: WAV, FLAC, OGG (anything libsndfile supports). Audio is automatically converted to 32-bit float stereo at 44.1 kHz (the device's native format). Mono files are duplicated to stereo.
 
+`wav-import` also caches a downsampled waveform overview to `~/.config/eastlight/waveforms/` (outside the device filesystem, alongside backups) for instant preview rendering in the GUI — nothing to configure, this happens automatically.
+
 ### Effects
 
 | Command | Description |

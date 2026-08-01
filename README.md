@@ -262,7 +262,7 @@ To disable automatic backups: `eastlight config --no-backup`
 - All 47 ICTL + 6 ECTL controller mapping sections
 - All 201 CTL FUNC values (0-200) with push/hold/click sub-actions
 
-Remaining gaps: 5 SETUP fields (R-V, likely reserved/internal — no known menu item), 4 CTL FUNC preferences (MODE PLAY, MODE UNDO, QUICK CLEAR, ALL CLEAR), 3 INPUT preferences (MIC/INST1/INST2 SYSTEM/MEMORY toggle). See [HARDWARE_TESTS.md](HARDWARE_TESTS.md) for the outstanding verification list and the [feasibility study](rc505-mk2-feasibility.md) for background.
+Remaining gaps: 5 SETUP fields (R-V, likely reserved/internal — no known menu item), 4 CTL FUNC preferences (MODE PLAY, MODE UNDO, QUICK CLEAR, ALL CLEAR), 3 INPUT preferences (MIC/INST1/INST2 SYSTEM/MEMORY toggle). See [dev/HARDWARE_TESTS.md](dev/HARDWARE_TESTS.md) for the outstanding verification list and the [feasibility study](dev/rc505-mk2-feasibility.md) for background.
 
 ## Development
 

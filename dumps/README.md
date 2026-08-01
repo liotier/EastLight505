@@ -26,8 +26,8 @@ colors that were originally unknown:
 | M-Q | Loop Status colors (REC/PLAY/DUB/STOP/BLANK) |
 
 Fields R-V (5 fields) have no known menu item and are marked
-`reserved`/`read_only` in the schema. See `HARDWARE_TESTS.md` item 5 for
-the outstanding confirmation.
+`reserved`/`read_only` in the schema. See `dev/HARDWARE_TESTS.md` item 5
+for the outstanding confirmation.
 
 ## 3. PREF fields — DONE
 
@@ -38,7 +38,7 @@ when this file was first written.
 
 ## Remaining gaps
 
-See `../HARDWARE_TESTS.md` for the full list of outstanding
+See `../dev/HARDWARE_TESTS.md` for the full list of outstanding
 hardware-verification questions:
 
 - CTL FUNC values above 200 (real device data goes at least to 211)

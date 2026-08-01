@@ -60,8 +60,12 @@ src/eastlight/
 
 ## Release process
 
-1. Update version in `pyproject.toml`
-2. Commit and push to `main`
-3. Create a GitHub release with a tag like `v0.1.0`
-4. GitHub Actions automatically builds and publishes to PyPI
-5. GitHub Pages documentation is updated on every push to `main`
+1. Update `__version__` in `src/eastlight/__init__.py` (this is the single
+   source of truth — `pyproject.toml` reads it dynamically)
+2. Add a `CHANGELOG.md` entry for the new version
+3. Commit and push to `main`
+4. Create a GitHub release with a tag matching the version, e.g. `v0.2.0-alpha`
+   (the `-alpha` suffix is the current convention while the project is
+   pre-1.0; the publish workflow verifies the tag matches the package version)
+5. GitHub Actions automatically runs tests, builds, and publishes to PyPI
+6. GitHub Pages documentation is updated on every push to `main`

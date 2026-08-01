@@ -111,13 +111,6 @@ class TestParseMemoryFile:
 class TestParseRealFiles:
     """Tests against real device dump files (skipped if not available)."""
 
-    @pytest.fixture
-    def dump_dir(self) -> Path:
-        d = Path("/tmp/rc505-dump/ROLAND/DATA")
-        if not d.exists():
-            pytest.skip("Device dump not available")
-        return d
-
     def test_parse_memory001a(self, dump_dir: Path) -> None:
         rc0 = parse_memory_file(dump_dir / "MEMORY001A.RC0")
         assert rc0.device_name == "RC-505MK2"

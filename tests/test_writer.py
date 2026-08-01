@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from eastlight.core.parser import parse_memory_file, parse_rc0, parse_system_file
+from eastlight.core.parser import RC0File, parse_memory_file, parse_rc0, parse_system_file
 from eastlight.core.writer import write_rc0
 
 
@@ -24,9 +24,9 @@ class TestWriteRC0:
         """parse → write → parse must produce identical field values."""
         rc0 = parse_rc0(sample_rc0_path)
         written = write_rc0(rc0)
-        rc0_back = parse_rc0.__wrapped__(written, rc0.path) if hasattr(parse_rc0, '__wrapped__') else _parse_from_string(written, rc0.path)
+        rc0_back = _parse_from_string(written, rc0.path)
 
-        for orig_elem, back_elem in zip(rc0.elements, rc0_back.elements):
+        for orig_elem, back_elem in zip(rc0.elements, rc0_back.elements, strict=True):
             assert orig_elem.element == back_elem.element
             assert orig_elem.id == back_elem.id
             assert orig_elem.section_names == back_elem.section_names
@@ -75,20 +75,13 @@ class TestWriteRC0:
 class TestRoundTripRealFiles:
     """Round-trip tests against real device dump files."""
 
-    @pytest.fixture
-    def dump_dir(self) -> Path:
-        d = Path("/tmp/rc505-dump/ROLAND/DATA")
-        if not d.exists():
-            pytest.skip("Device dump not available")
-        return d
-
     def test_memory001a_roundtrip_values(self, dump_dir: Path) -> None:
         """Parse → write → parse Memory001A: all field values must match."""
         rc0 = parse_memory_file(dump_dir / "MEMORY001A.RC0")
         written = write_rc0(rc0)
         rc0_back = _parse_from_string(written, rc0.path)
 
-        for orig_elem, back_elem in zip(rc0.elements, rc0_back.elements):
+        for orig_elem, back_elem in zip(rc0.elements, rc0_back.elements, strict=True):
             assert orig_elem.element == back_elem.element
             assert orig_elem.id == back_elem.id
             for sec_name in orig_elem.section_names:
@@ -105,7 +98,7 @@ class TestRoundTripRealFiles:
         written = write_rc0(rc0)
         if original != written:
             # Find first difference for debugging
-            for i, (a, b) in enumerate(zip(original, written)):
+            for i, (a, b) in enumerate(zip(original, written, strict=False)):
                 if a != b:
                     context = 40
                     pytest.fail(
@@ -124,7 +117,7 @@ class TestRoundTripRealFiles:
         written = write_rc0(rc0)
         rc0_back = _parse_from_string(written, rc0.path)
 
-        for orig_elem, back_elem in zip(rc0.elements, rc0_back.elements):
+        for orig_elem, back_elem in zip(rc0.elements, rc0_back.elements, strict=True):
             for sec_name in orig_elem.section_names:
                 assert orig_elem[sec_name].fields == back_elem[sec_name].fields, (
                     f"System section {sec_name} roundtrip mismatch"
@@ -140,14 +133,14 @@ class TestRoundTripRealFiles:
             rc0 = parse_memory_file(path)
             written = write_rc0(rc0)
             rc0_back = _parse_from_string(written, path)
-            for orig_elem, back_elem in zip(rc0.elements, rc0_back.elements):
+            for orig_elem, back_elem in zip(rc0.elements, rc0_back.elements, strict=True):
                 for sec_name in orig_elem.section_names:
                     if orig_elem[sec_name].fields != back_elem[sec_name].fields:
                         failures.append(f"Memory{n:03d}A/{sec_name}")
         assert not failures, f"Roundtrip failures: {failures}"
 
 
-def _parse_from_string(content: str, path: Path) -> "RC0File":
+def _parse_from_string(content: str, path: Path) -> RC0File:
     """Helper: parse RC0 from a string (write to temp, then parse)."""
     import tempfile
     with tempfile.NamedTemporaryFile(mode="w", suffix=".RC0", delete=False, encoding="utf-8") as f:

@@ -1,0 +1,9 @@
+include CHANGELOG.md
+include HARDWARE_TESTS.md
+include mkdocs.yml
+include rc505-mk2-feasibility.md
+recursive-include tests *.py
+recursive-include docs *.md
+graft src/eastlight/schema
+prune dumps
+global-exclude *.py[cod] __pycache__/*

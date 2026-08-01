@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
 
 import numpy as np
@@ -13,7 +12,6 @@ from click.testing import CliRunner
 from eastlight.cli.main import cli
 from eastlight.core.parser import parse_memory_file
 from eastlight.core.wav import DEVICE_SAMPLE_RATE, DEVICE_SUBTYPE
-from eastlight.core.writer import write_rc0
 
 
 @pytest.fixture
@@ -270,6 +268,66 @@ class TestDiffCommand:
         result = runner.invoke(cli, ["diff", "1", "2", "-d", str(roland_dir)])
         assert result.exit_code == 0
         # Should show difference in pan (tag C)
+
+
+@pytest.fixture
+def ifx_only_diff_roland_dir(tmp_path: Path, two_chain_rc0_content: str) -> Path:
+    """ROLAND/ with two memories differing ONLY in ifx.AA fx_type.
+
+    tfx.AA is identical (49) in both. This isolates whether diff can
+    see an ifx-only difference: before the Memory namespace fix, diff
+    iterates mem.section_names, which (due to the ifx/tfx collision)
+    only ever exposes whichever chain's copy of "AA" the parser
+    processed last (tfx, since it comes after ifx). With tfx.AA
+    identical between the two memories, a diff built on the collided
+    view would incorrectly report no difference at all — masking the
+    real ifx.AA change entirely.
+    """
+    root = tmp_path / "ROLAND"
+    data = root / "DATA"
+    wave = root / "WAVE"
+    data.mkdir(parents=True)
+    wave.mkdir(parents=True)
+
+    (data / "MEMORY001A.RC0").write_text(two_chain_rc0_content, encoding="utf-8")
+
+    content_002 = (
+        two_chain_rc0_content
+        .replace('<mem id="0">', '<mem id="1">')
+        .replace('<ifx id="0">', '<ifx id="1">')
+        .replace('<tfx id="0">', '<tfx id="1">')
+        .replace("<C>35</C>\n<D>0</D>\n</AA>", "<C>1</C>\n<D>0</D>\n</AA>", 1)  # ifx only
+    )
+    (data / "MEMORY002A.RC0").write_text(content_002, encoding="utf-8")
+
+    return root
+
+
+class TestDiffFXCollision:
+    def test_diff_detects_ifx_only_difference(
+        self, runner: CliRunner, ifx_only_diff_roland_dir: Path
+    ) -> None:
+        """Regression test: diff must see an ifx-only difference even
+        when tfx (which currently wins the section-name collision) is
+        identical between the two memories."""
+        # Sanity-check the fixture: confirm tfx really is identical and
+        # ifx really does differ, independent of the Memory/diff layer.
+        rc0_1 = parse_memory_file(
+            ifx_only_diff_roland_dir / "DATA" / "MEMORY001A.RC0"
+        )
+        rc0_2 = parse_memory_file(
+            ifx_only_diff_roland_dir / "DATA" / "MEMORY002A.RC0"
+        )
+        assert rc0_1.tfx.sections["AA"]["C"] == rc0_2.tfx.sections["AA"]["C"] == 49
+        assert rc0_1.ifx.sections["AA"]["C"] == 35
+        assert rc0_2.ifx.sections["AA"]["C"] == 1
+
+        result = runner.invoke(
+            cli, ["diff", "1", "2", "-d", str(ifx_only_diff_roland_dir)]
+        )
+        assert result.exit_code == 0
+        assert "No differences found" not in result.output
+        assert "difference(s) found" in result.output
 
 
 # --- WAV command helpers ---

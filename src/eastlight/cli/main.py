@@ -5,25 +5,17 @@ from __future__ import annotations
 from pathlib import Path
 
 import click
+import yaml
 from rich.console import Console
 from rich.table import Table
-
-import yaml
 
 from eastlight.core.config import detect_device, load_config, resolve_roland_dir, save_config
 from eastlight.core.library import RC505Library
 from eastlight.core.model import Memory
+from eastlight.core.operations import import_track_audio
 from eastlight.core.parser import parse_memory_file
 from eastlight.core.schema import SchemaRegistry
-from eastlight.core.wav import (
-    DEVICE_SAMPLE_RATE,
-    ExportFormat,
-    import_audio,
-    wav_export,
-    wav_info,
-    wav_write_device,
-)
-from eastlight.core.writer import write_rc0
+from eastlight.core.wav import ExportFormat, wav_export, wav_info
 
 console = Console()
 
@@ -40,7 +32,7 @@ def _resolve_dir(roland_dir: str | None) -> str:
     try:
         return str(resolve_roland_dir(roland_dir))
     except ValueError as e:
-        raise click.ClickException(str(e))
+        raise click.ClickException(str(e)) from e
 
 
 def _open_memory(roland_dir: str, memory_num: int) -> tuple[RC505Library, Memory, SchemaRegistry]:
@@ -402,16 +394,55 @@ def clear(memory_num: int, roland_dir: str | None, force: bool, dry_run: bool) -
                 console.print(f"  delete {w.parent.name}/{w.name}")
         return
 
-    if not force:
-        if not click.confirm(
-            f"Clear memory {memory_num:03d} ('{name}')? This removes RC0 and WAV data."
-        ):
-            raise click.Abort()
+    if not force and not click.confirm(
+        f"Clear memory {memory_num:03d} ('{name}')? This removes RC0 and WAV data."
+    ):
+        raise click.Abort()
 
     lib.clear_memory(memory_num)
     console.print(
         f"[green]Cleared[/green] memory {memory_num:03d} ('{name}')"
     )
+
+
+def _diff_section(sa, sb, title: str, mem_a: int, mem_b: int) -> int:
+    """Print a diff table for one pair of resolved sections. Returns the
+    number of differing fields found (0 if none, in which case nothing
+    is printed)."""
+    diffs = []
+    all_tags = set(sa.raw.fields.keys()) | set(sb.raw.fields.keys())
+    for tag in sorted(all_tags):
+        val_a = sa.raw.fields.get(tag)
+        val_b = sb.raw.fields.get(tag)
+        if val_a != val_b:
+            # Resolve parameter name from schema
+            param = tag
+            if sa.schema:
+                fd = sa.schema.fields.get(tag)
+                if fd:
+                    param = fd.display or fd.name
+            diffs.append((tag, param, val_a, val_b))
+
+    if not diffs:
+        return 0
+
+    table = Table(title=title, show_header=True)
+    table.add_column("Tag", style="dim", width=4)
+    table.add_column("Parameter", style="cyan", min_width=20)
+    table.add_column(f"{mem_a:03d}", justify="right", style="red")
+    table.add_column(f"{mem_b:03d}", justify="right", style="green")
+
+    for tag, param, va, vb in diffs:
+        table.add_row(
+            tag,
+            param,
+            str(va) if va is not None else "-",
+            str(vb) if vb is not None else "-",
+        )
+
+    console.print(table)
+    console.print()
+    return len(diffs)
 
 
 @cli.command()
@@ -421,7 +452,7 @@ def clear(memory_num: int, roland_dir: str | None, force: bool, dry_run: bool) -
               default=None, help="ROLAND/ directory (default: config or auto-detect)")
 @click.option("--section", "-s", help="Compare only this section")
 def diff(mem_a: int, mem_b: int, roland_dir: str | None, section: str | None) -> None:
-    """Show differences between two memories.
+    """Show differences between two memories, including IFX and TFX.
 
     Example: eastlight diff 1 3
     """
@@ -440,47 +471,32 @@ def diff(mem_a: int, mem_b: int, roland_dir: str | None, section: str | None) ->
     )
     console.print()
 
-    sections_to_check = [section] if section else ma.section_names
     total_diffs = 0
 
+    sections_to_check = [section] if section else ma.section_names
     for sec_name in sections_to_check:
         sa = ma.section(sec_name)
         sb = mb.section(sec_name)
         if sa is None or sb is None:
             continue
+        total_diffs += _diff_section(sa, sb, sec_name, mem_a, mem_b)
 
-        diffs = []
-        all_tags = set(sa.raw.fields.keys()) | set(sb.raw.fields.keys())
-        for tag in sorted(all_tags):
-            val_a = sa.raw.fields.get(tag)
-            val_b = sb.raw.fields.get(tag)
-            if val_a != val_b:
-                # Resolve parameter name from schema
-                param = tag
-                if sa.schema:
-                    fd = sa.schema.fields.get(tag)
-                    if fd:
-                        param = fd.display or fd.name
-                diffs.append((tag, param, val_a, val_b))
-
-        if diffs:
-            table = Table(title=sec_name, show_header=True)
-            table.add_column("Tag", style="dim", width=4)
-            table.add_column("Parameter", style="cyan", min_width=20)
-            table.add_column(f"{mem_a:03d}", justify="right", style="red")
-            table.add_column(f"{mem_b:03d}", justify="right", style="green")
-
-            for tag, param, va, vb in diffs:
-                table.add_row(
-                    tag,
-                    param,
-                    str(va) if va is not None else "-",
-                    str(vb) if vb is not None else "-",
-                )
-
-            console.print(table)
-            console.print()
-            total_diffs += len(diffs)
+    # ifx and tfx sections are namespaced separately from mem (see
+    # Memory.fx_section) since both chains reuse the same section names
+    # (subslot headers like "AA", effect sections like "AA_LPF").
+    for chain, chain_label in (("ifx", "IFX"), ("tfx", "TFX")):
+        fx_names = (
+            [section] if section
+            else sorted(set(ma.fx_section_names(chain)) | set(mb.fx_section_names(chain)))
+        )
+        for sec_name in fx_names:
+            sa = ma.fx_section(chain, sec_name)
+            sb = mb.fx_section(chain, sec_name)
+            if sa is None or sb is None:
+                continue
+            total_diffs += _diff_section(
+                sa, sb, f"{chain_label}.{sec_name}", mem_a, mem_b
+            )
 
     if total_diffs == 0:
         console.print("[dim]No differences found.[/dim]")
@@ -636,54 +652,21 @@ def wav_import_cmd(
 
     # Check for existing audio
     existing = slot.track_wav(track_num)
-    if existing is not None and not force:
-        if not click.confirm(
-            f"Track {track_num} already has audio. Overwrite?"
-        ):
-            raise click.Abort()
+    if existing is not None and not force and not click.confirm(
+        f"Track {track_num} already has audio. Overwrite?"
+    ):
+        raise click.Abort()
 
-    # Import and convert audio
-    data, sr = import_audio(input_file)
-
-    if sr != DEVICE_SAMPLE_RATE:
-        raise click.ClickException(
-            f"Sample rate mismatch: source is {sr} Hz, device requires {DEVICE_SAMPLE_RATE} Hz. "
-            f"Please resample your audio to {DEVICE_SAMPLE_RATE} Hz before importing."
-        )
-
-    # Write to device WAV location
-    wav_dir = lib.wave_dir / f"{memory_num:03d}_{track_num}"
-    wav_dir.mkdir(parents=True, exist_ok=True)
-    dst_path = wav_dir / f"{memory_num:03d}_{track_num}.WAV"
-    wav_write_device(dst_path, data, sr)
-
-    # Update track metadata in the RC0 file
     registry = _load_registry()
-    rc0 = lib.parse_memory(memory_num)
-    mem = Memory(rc0, registry)
-    track = mem.track(track_num)
-    if track is not None:
-        total_samples = data.shape[0]
-        track.set_by_tag("W", 1)  # has_audio = true
-        track.set_by_tag("X", total_samples)  # total_samples
-        # Compute samples_per_measure from tempo if available
-        tempo_x10 = track.get_by_tag("U")
-        if tempo_x10 and tempo_x10 > 0:
-            bpm = tempo_x10 / 10.0
-            samples_per_beat = DEVICE_SAMPLE_RATE * 60.0 / bpm
-            samples_per_measure = int(samples_per_beat * 4)
-            track.set_by_tag("V", samples_per_measure)
-            # Compute loop length in measures
-            if samples_per_measure > 0:
-                measures = round(total_samples / samples_per_measure)
-                track.set_by_tag("S", max(1, measures))
-        lib.save_memory(memory_num, rc0)
+    try:
+        result = import_track_audio(lib, registry, memory_num, track_num, input_file)
+    except ValueError as e:
+        raise click.ClickException(str(e)) from e
 
-    dur = data.shape[0] / sr
     console.print(
         f"[green]Imported[/green] {Path(input_file).name} → "
         f"memory {memory_num:03d} track {track_num} "
-        f"({dur:.2f}s, {data.shape[0]} samples)"
+        f"({result.duration:.2f}s, {result.frames} samples)"
     )
 
 
@@ -1170,7 +1153,8 @@ def config(set_dir: str | None, backup: bool | None, show: bool) -> None:
     # Default: show config
     console.print("[bold]EastLight Configuration[/bold]")
     console.print(f"  ROLAND dir: {cfg.roland_dir or '[dim](not set)[/dim]'}")
-    console.print(f"  Backup:     {'[green]enabled[/green]' if cfg.backup else '[red]disabled[/red]'}")
+    backup_state = "[green]enabled[/green]" if cfg.backup else "[red]disabled[/red]"
+    console.print(f"  Backup:     {backup_state}")
     if cfg.recent:
         console.print("  Recent:")
         for r in cfg.recent:
@@ -1350,7 +1334,8 @@ def ctl_set(
 
     # Resolve CTL FUNC names for display
     ctl_func_names = {"ctl_func", "ctl_func_long", "ctl_func_secondary"}
-    resolved_param = schema.fields.get(tag).name if schema and schema.fields.get(tag) else param_name
+    field_def = schema.fields.get(tag) if schema else None
+    resolved_param = field_def.name if field_def else param_name
     func_detail = ""
     if resolved_param in ctl_func_names:
         ctl_func = registry.ctl_func
@@ -1450,16 +1435,15 @@ def backup_restore(timestamp: str, roland_dir: str | None, force: bool) -> None:
     roland_dir = _resolve_dir(roland_dir)
     lib = RC505Library(roland_dir)
 
-    if not force:
-        if not click.confirm(
-            f"Restore backup '{timestamp}'? This will overwrite current files."
-        ):
-            raise click.Abort()
+    if not force and not click.confirm(
+        f"Restore backup '{timestamp}'? This will overwrite current files."
+    ):
+        raise click.Abort()
 
     try:
         restored = lib.restore_backup(timestamp)
     except FileNotFoundError as e:
-        raise click.ClickException(str(e))
+        raise click.ClickException(str(e)) from e
 
     for rel in restored:
         console.print(f"  [green]Restored[/green] {rel}")
@@ -1509,6 +1493,8 @@ def template_export(
     Templates contain parameter values (no audio) and can be applied
     to other memories with 'template-apply'. Useful for copying settings
     like effects, track config, or master settings across memories.
+    Captures mem-level sections (tracks, master, mixer, ...) as well as
+    the full IFX and TFX effect chains.
 
     Examples:
 
@@ -1519,20 +1505,38 @@ def template_export(
     roland_dir = _resolve_dir(roland_dir)
     _, mem, _ = _open_memory(roland_dir, memory_num)
 
-    sections_to_export = list(section) if section else mem.section_names
-    template: dict = {"_source": f"memory {memory_num:03d}", "_sections": {}}
+    name_filter = set(section) if section else None
+    template: dict = {
+        "_source": f"memory {memory_num:03d}",
+        "_sections": {},
+        "_ifx_sections": {},
+        "_tfx_sections": {},
+    }
 
+    sections_to_export = name_filter if name_filter is not None else mem.section_names
     for sec_name in sections_to_export:
         resolved = mem.section(sec_name)
         if resolved is None:
             continue
         template["_sections"][sec_name] = dict(resolved.raw.fields)
 
+    for chain, key in (("ifx", "_ifx_sections"), ("tfx", "_tfx_sections")):
+        fx_names = name_filter if name_filter is not None else mem.fx_section_names(chain)
+        for sec_name in fx_names:
+            resolved = mem.fx_section(chain, sec_name)
+            if resolved is None:
+                continue
+            template[key][sec_name] = dict(resolved.raw.fields)
+
     out_path = Path(output)
     with open(out_path, "w") as f:
         yaml.dump(template, f, default_flow_style=False, sort_keys=False)
 
-    n = len(template["_sections"])
+    n = (
+        len(template["_sections"])
+        + len(template["_ifx_sections"])
+        + len(template["_tfx_sections"])
+    )
     console.print(
         f"[green]Exported[/green] {n} section(s) from memory {memory_num:03d} → {out_path.name}"
     )
@@ -1556,6 +1560,8 @@ def template_apply(
     """Apply a YAML template to one or more memories.
 
     MEMORY_NUMS is a comma-separated list or range: "1,2,3" or "1-5" or "1-3,7,10-12".
+    Applies mem-level sections as well as any IFX/TFX sections the
+    template contains.
 
     Examples:
 
@@ -1572,12 +1578,18 @@ def template_apply(
         template = yaml.safe_load(f)
 
     sections_data = template.get("_sections", {})
-    if not sections_data:
+    ifx_data = template.get("_ifx_sections", {})
+    tfx_data = template.get("_tfx_sections", {})
+    if not sections_data and not ifx_data and not tfx_data:
         raise click.ClickException("Template contains no sections.")
 
-    # Filter sections if requested
+    # Filter sections if requested (applies uniformly by bare name across
+    # mem, ifx, and tfx — a name like "AA" matches that section in
+    # whichever of the three namespaces it appears in)
     if section:
         sections_data = {k: v for k, v in sections_data.items() if k in section}
+        ifx_data = {k: v for k, v in ifx_data.items() if k in section}
+        tfx_data = {k: v for k, v in tfx_data.items() if k in section}
 
     # Parse memory number ranges
     targets = _parse_memory_range(memory_nums)
@@ -1600,13 +1612,23 @@ def template_apply(
                 if tag in resolved.raw.fields:
                     resolved.raw[tag] = value
 
+        for chain, data in (("ifx", ifx_data), ("tfx", tfx_data)):
+            for sec_name, fields in data.items():
+                resolved = mem.fx_section(chain, sec_name)
+                if resolved is None:
+                    continue
+                for tag, value in fields.items():
+                    if tag in resolved.raw.fields:
+                        resolved.raw[tag] = value
+
         if not dry_run:
             lib.save_memory(num, rc0)
         applied += 1
 
+    n_sections = len(sections_data) + len(ifx_data) + len(tfx_data)
     label = "[dim](dry-run)[/dim]" if dry_run else "[green]Applied[/green]"
     console.print(
-        f"{label} template ({len(sections_data)} section(s)) "
+        f"{label} template ({n_sections} section(s)) "
         f"to {applied} memory slot(s)"
     )
 

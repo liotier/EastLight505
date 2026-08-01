@@ -711,10 +711,16 @@ As of the current iteration, YAML schemas cover all primary memory-level section
 | pref.yaml | PREF (system) | 14 (A-N) | High — SYSTEM/MEMORY toggles |
 | fx_subslot.yaml | 16 sub-slots | 4 (A-D) | Medium — sw + fx_type identified |
 
-**Remaining to map:**
+**Remaining to map (at time of writing):**
 - 66 IFX + 70 TFX effect type parameter sets (see Section 8.12 for complete field-count table)
 - CTL FUNC enum values (200+ entries, Parameter Guide pages 14-21) — needed for ICTL/ECTL display
 - SETUP fields J-V (13 of 22 fields unidentified)
+
+> **Update (v0.2.0):** All of the above are now done. All 70 FX types are
+> mapped with full parameters, CTL FUNC has all 201 values (0-200) with
+> push/hold/click sub-actions, and SETUP is mapped through Q — only R-V
+> (5 fields) remain unidentified. See [docs/schema.md](docs/schema.md)
+> for the current, authoritative coverage summary.
 
 ### 8.11 FX Type Parameter Reference
 
@@ -837,11 +843,18 @@ There are 4 slots × 4 sub-slots = 16 instances of each type in both IFX and TFX
 
 ### 8.12 Open Questions
 
-**Format (remaining ~2%):**
+**Format (remaining ~2%, at time of writing — see update below):**
 - CTL FUNC enum (200+ entries, Parameter Guide pages 14-21) — function indices are stored in ICTL/ECTL fields but display names not yet transcribed
 - SETUP fields J-V (13 of 22 system SETUP fields have unknown purpose — likely internal state: counters, timers, calibration)
 - MIDI sync_source field (E=9 in dump) doesn't match expected 2-value USB/MIDI enum — may be a channel or combined encoding
 - Exact FX type index → name mapping for FX_SLOT.fx_type and FX_SUBSLOT.fx_type fields
+
+> **Update (v0.2.0):** CTL FUNC is fully mapped (201 entries, 0-200).
+> SETUP is mapped through Q; only R-V (5 fields) remain unidentified.
+> The FX type index → name mapping is resolved (`fx_types.yaml`). Real
+> remaining gaps: SETUP R-V, 4 CTL FUNC preference fields, 3 INPUT
+> preference fields, CTL FUNC values above 200, and ASSIGN range maxima.
+> See [HARDWARE_TESTS.md](HARDWARE_TESTS.md) for the active checklist.
 
 **Device behavior (need empirical testing):**
 - Does the device validate the count footer? (What if the value is wrong?)

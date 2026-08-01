@@ -8,7 +8,7 @@ import pytest
 
 from eastlight.core.model import FieldChange, Memory
 from eastlight.core.parser import parse_memory_file
-from eastlight.core.schema import SchemaRegistry, load_schema_from_yaml
+from eastlight.core.schema import SchemaRegistry
 
 
 @pytest.fixture
@@ -83,9 +83,75 @@ class TestMemory:
         assert "NAME" in names
         assert "TRACK1" in names
         assert "MASTER" in names
-        assert "SETUP" in names  # from ifx/tfx
+        # SETUP lives in <ifx>/<tfx>, not <mem> — reachable via
+        # fx_section(), not section_names (see test_fx_sections_ifx_tfx_distinct
+        # and test_section_names_excludes_fx_sections below for why these
+        # namespaces are kept separate).
+        assert "SETUP" not in names
+        assert mem.fx_section("ifx", "SETUP") is not None
+        assert mem.fx_section("tfx", "SETUP") is not None
 
-    def test_master_schema_resolution(self, sample_rc0_path: Path, registry: SchemaRegistry) -> None:
+    def test_fx_sections_ifx_tfx_distinct(
+        self, two_chain_rc0_path: Path, registry: SchemaRegistry
+    ) -> None:
+        """ifx and tfx share ~1000 identical section names on a real device
+        (AA, AA_LPF, ...). Memory must keep them in separate namespaces
+        rather than letting the later element silently overwrite the
+        earlier one under the same bare name."""
+        rc0 = parse_memory_file(two_chain_rc0_path)
+        mem = Memory(rc0, registry)
+
+        ifx_aa = mem.fx_section("ifx", "AA")
+        tfx_aa = mem.fx_section("tfx", "AA")
+        assert ifx_aa is not None
+        assert tfx_aa is not None
+        assert ifx_aa is not tfx_aa
+        assert ifx_aa.get_by_tag("C") == 35  # ifx fx_type, from the fixture
+        assert tfx_aa.get_by_tag("C") == 49  # tfx fx_type, from the fixture
+
+        ifx_lpf = mem.fx_section("ifx", "AA_LPF")
+        tfx_lpf = mem.fx_section("tfx", "AA_LPF")
+        assert ifx_lpf is not None
+        assert tfx_lpf is not None
+        assert ifx_lpf.get_by_tag("A") == 3
+        assert tfx_lpf.get_by_tag("A") == 9
+
+    def test_fx_section_missing_chain_or_name(
+        self, two_chain_rc0_path: Path, registry: SchemaRegistry
+    ) -> None:
+        rc0 = parse_memory_file(two_chain_rc0_path)
+        mem = Memory(rc0, registry)
+        assert mem.fx_section("ifx", "NONEXISTENT") is None
+        assert mem.fx_section("tfx", "AA") is not None
+
+    def test_fx_section_names_scoped_to_chain(
+        self, two_chain_rc0_path: Path, registry: SchemaRegistry
+    ) -> None:
+        rc0 = parse_memory_file(two_chain_rc0_path)
+        mem = Memory(rc0, registry)
+        ifx_names = mem.fx_section_names("ifx")
+        tfx_names = mem.fx_section_names("tfx")
+        assert set(ifx_names) == {"SETUP", "AA", "AA_LPF"}
+        assert set(tfx_names) == {"SETUP", "AA", "AA_LPF"}
+
+    def test_section_names_excludes_fx_sections(
+        self, two_chain_rc0_path: Path, registry: SchemaRegistry
+    ) -> None:
+        """Memory.section_names must only reflect the mem element — FX
+        sections live in a separate namespace and are never ambiguous
+        with mem-level sections, but must not leak into this list either
+        (a caller iterating section_names to build e.g. a template export
+        should not accidentally pick up one chain's copy of a shared
+        section name and mislabel it as mem-level data)."""
+        rc0 = parse_memory_file(two_chain_rc0_path)
+        mem = Memory(rc0, registry)
+        assert set(mem.section_names) == {"NAME", "MASTER"}
+        assert "AA" not in mem.section_names
+        assert "SETUP" not in mem.section_names
+
+    def test_master_schema_resolution(
+        self, sample_rc0_path: Path, registry: SchemaRegistry
+    ) -> None:
         rc0 = parse_memory_file(sample_rc0_path)
         mem = Memory(rc0, registry)
         master = mem.section("MASTER")
@@ -100,11 +166,8 @@ class TestSchemaResolution:
     """Schema resolution tests against real device dump."""
 
     @pytest.fixture
-    def real_mem(self, registry: SchemaRegistry) -> Memory:
-        dump_path = Path("/tmp/rc505-dump/ROLAND/DATA/MEMORY001A.RC0")
-        if not dump_path.exists():
-            pytest.skip("Device dump not available")
-        rc0 = parse_memory_file(dump_path)
+    def real_mem(self, dump_dir: Path, registry: SchemaRegistry) -> Memory:
+        rc0 = parse_memory_file(dump_dir / "MEMORY001A.RC0")
         return Memory(rc0, registry)
 
     def test_rec_schema(self, real_mem: Memory) -> None:
@@ -274,3 +337,62 @@ class TestChangeListener:
         track1.remove_listener(changes.append)
         track1.set_by_name("pan", 80)
         assert len(changes) == 1  # only the first change
+
+    def test_undo_notifies_listener(
+        self, sample_rc0_path: Path, registry: SchemaRegistry
+    ) -> None:
+        """Memory.undo() must notify listeners, not just mutate raw data.
+
+        A GUI widget bound via add_listener() needs to hear about the
+        reversal so it can update its display; if undo() bypasses the
+        listener path, the widget silently goes stale while the
+        underlying data has actually changed.
+        """
+        rc0 = parse_memory_file(sample_rc0_path)
+        mem = Memory(rc0, registry)
+        track1 = mem.track(1)
+        changes: list[FieldChange] = []
+        track1.add_listener(changes.append)
+
+        track1.set_by_name("pan", 75)
+        assert len(changes) == 1
+
+        mem.undo()
+        assert len(changes) == 2, "undo() did not notify the listener"
+        assert changes[1].param_name == "pan"
+        assert changes[1].old_value == 75
+        assert changes[1].new_value == 50
+        assert track1.get_by_name("pan") == 50
+
+    def test_redo_notifies_listener(
+        self, sample_rc0_path: Path, registry: SchemaRegistry
+    ) -> None:
+        rc0 = parse_memory_file(sample_rc0_path)
+        mem = Memory(rc0, registry)
+        track1 = mem.track(1)
+        changes: list[FieldChange] = []
+
+        track1.set_by_name("pan", 75)
+        mem.undo()
+        track1.add_listener(changes.append)
+
+        mem.redo()
+        assert len(changes) == 1, "redo() did not notify the listener"
+        assert changes[0].old_value == 50
+        assert changes[0].new_value == 75
+        assert track1.get_by_name("pan") == 75
+
+    def test_undo_does_not_push_new_undo_entry(
+        self, sample_rc0_path: Path, registry: SchemaRegistry
+    ) -> None:
+        """undo() must notify listeners without re-pushing the reversed
+        change onto the undo stack (that would make undo un-undoable and
+        corrupt the stack depth)."""
+        rc0 = parse_memory_file(sample_rc0_path)
+        mem = Memory(rc0, registry)
+        track1 = mem.track(1)
+        track1.set_by_name("pan", 75)
+        assert mem.undo_stack.can_undo
+        mem.undo()
+        assert not mem.undo_stack.can_undo
+        assert mem.undo_stack.can_redo

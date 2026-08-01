@@ -8,17 +8,13 @@ EastLight reads and writes the RC-505 MK2's SD card backup format (`ROLAND/` dir
 
 ## Install
 
-### From PyPI (recommended)
+### With pipx (recommended)
 
 ```
-pip install eastlight
+pipx install "eastlight[gui]"
 ```
 
-For the graphical interface (PyQt6):
-
-```
-pip install eastlight[gui]
-```
+Leave off `[gui]` for CLI-only. See [Install docs](https://liotier.github.io/EastLightRC-505mk2Librarian/install/) for pip and from-source options, plus pipx troubleshooting if you installed without `[gui]` and need to add it later.
 
 ### From source
 
@@ -76,7 +72,7 @@ The GUI provides:
 - **Undo/redo** — full undo stack for parameter edits
 - **Device detection** — auto-detect connected RC-505 MK2 devices
 
-Requires `pip install eastlight[gui]` (adds PyQt6).
+Requires `pipx install "eastlight[gui]"` (adds PyQt6).
 
 ## Getting started (CLI)
 
@@ -263,10 +259,10 @@ To disable automatic backups: `eastlight config --no-backup`
 - All 70 FX effect types (66 shared + 4 TFX-exclusive)
 - FX type index enum with reverse lookup
 - System settings (SETUP, PREF, COLOR, USB, MIDI)
-- All 53 ICTL + 6 ECTL controller mapping sections
+- All 47 ICTL + 6 ECTL controller mapping sections
 - All 201 CTL FUNC values (0-200) with push/hold/click sub-actions
 
-Remaining gaps: 13 SETUP fields (J-V), 6 PREF fields (O-T), 4 CTL FUNC preferences (MODE PLAY, MODE UNDO, QUICK CLEAR, ALL CLEAR), 3 INPUT preferences (MIC/INST1/INST2 SYSTEM/MEMORY toggle). See the [feasibility study](rc505-mk2-feasibility.md) for details.
+Remaining gaps: 5 SETUP fields (R-V, likely reserved/internal — no known menu item), 4 CTL FUNC preferences (MODE PLAY, MODE UNDO, QUICK CLEAR, ALL CLEAR), 3 INPUT preferences (MIC/INST1/INST2 SYSTEM/MEMORY toggle). See [HARDWARE_TESTS.md](HARDWARE_TESTS.md) for the outstanding verification list and the [feasibility study](rc505-mk2-feasibility.md) for background.
 
 ## Development
 

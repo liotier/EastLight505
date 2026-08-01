@@ -109,16 +109,23 @@ try:
 except ImportError:
     _has_pyqt6 = False
 
-# Check for display availability
+# Check for a usable Qt platform: a real display, an explicitly requested
+# headless plugin (QT_QPA_PLATFORM=offscreen and friends), or any non-Linux
+# OS (Windows/macOS always have a window server, so DISPLAY is irrelevant).
 _has_display = False
 if _has_pyqt6:
     import os
+    import sys
 
-    _has_display = bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
+    _has_display = (
+        sys.platform != "linux"
+        or bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
+        or os.environ.get("QT_QPA_PLATFORM") in {"offscreen", "minimal", "vnc"}
+    )
 
 requires_qt = pytest.mark.skipif(
     not (_has_pyqt6 and _has_display),
-    reason="PyQt6 not installed or no display available",
+    reason="PyQt6 not installed or no usable Qt platform",
 )
 
 

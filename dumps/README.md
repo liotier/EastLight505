@@ -6,11 +6,10 @@ All 201 CTL FUNC values (0-200) mapped with push/hold/click sub-actions.
 Integrated into `src/eastlight/schema/ctl_func.yaml` and displayed by
 `ctl-show` and `ctl-set`.
 
-## 2. SETUP unknown fields
+## 2. SETUP fields — DONE (mostly)
 
-**13 unknown fields: J, K, L, M, N, O, P, Q, R, S, T, U, V**
-
-Already mapped (A-I):
+Fields A-Q are all mapped, including the knob functions and loop status
+colors that were originally unknown:
 
 | Tag | Name |
 |-----|------|
@@ -21,37 +20,29 @@ Already mapped (A-I):
 | E | Auto Off |
 | F | Indicator (TYPE1/TYPE2/OFF) |
 | G | FX Knob Mode (DIRECT/TOGGLE) |
-| H | Knob Function |
+| H | Knob Func 1 |
 | I | Memory Extent Min |
+| J-L | Knob Func 2-4 |
+| M-Q | Loop Status colors (REC/PLAY/DUB/STOP/BLANK) |
 
-No per-field dumps needed here — instead, just tell me what SYSTEM > SETUP
-menu items exist beyond the ones above. The RC-505 MK2 SETUP menu should
-list them. If you can give me the menu item label and which value range
-it shows when you scroll, that's sufficient.
+Fields R-V (5 fields) have no known menu item and are marked
+`reserved`/`read_only` in the schema. See `HARDWARE_TESTS.md` item 5 for
+the outstanding confirmation.
 
-## 3. PREF unknown fields
+## 3. PREF fields — DONE
 
-**6 unknown fields: O, P, Q, R, S, T**
+All 20 fields (A-T) are mapped. The final 6 (O-T) turned out to be
+CTL1-4 and EXP1-2 SYSTEM/MEMORY toggles, found under
+MENU → CTL FUNC → PREF on the device — a different menu than expected
+when this file was first written.
 
-Already mapped (A-N):
+## Remaining gaps
 
-| Tag | Name (all are SYSTEM/MEMORY toggles) |
-|-----|------|
-| A | Main Output |
-| B | Sub 1 Output |
-| C | Sub 2 Output |
-| D | Phones Output |
-| E | Rhythm |
-| F | Master FX |
-| G | Input |
-| H | Output |
-| I | Routing |
-| J | Mixer |
-| K | EQ |
-| L | Controllers |
-| M | Assign |
-| N | Track Settings |
+See `../HARDWARE_TESTS.md` for the full list of outstanding
+hardware-verification questions:
 
-Same approach: look at the SYSTEM > PREF menu on the device and tell me
-which preference items appear after "Track Settings". They should all be
-SYSTEM/MEMORY toggles.
+- CTL FUNC values above 200 (real device data goes at least to 211)
+- CTL FUNC preferences: MODE PLAY, MODE UNDO, QUICK CLEAR, ALL CLEAR
+- INPUT preferences: MIC, INST1, INST2 (SYSTEM/MEMORY toggles)
+- SETUP R-V: confirm genuinely reserved (no menu item found so far)
+- ASSIGN field range maxima (real data exceeds declared schema ranges)

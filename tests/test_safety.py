@@ -17,7 +17,6 @@ from eastlight.core.config import (
     save_config,
 )
 from eastlight.core.library import RC505Library
-from eastlight.core.parser import parse_memory_file
 
 
 @pytest.fixture

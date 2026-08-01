@@ -8,11 +8,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from pathlib import Path
 
 from .parser import RC0File, RC0Section
 from .schema import SchemaRegistry, SectionSchema
-
 
 # --- Change tracking and undo/redo ---
 

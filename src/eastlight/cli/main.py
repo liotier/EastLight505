@@ -5,10 +5,9 @@ from __future__ import annotations
 from pathlib import Path
 
 import click
+import yaml
 from rich.console import Console
 from rich.table import Table
-
-import yaml
 
 from eastlight.core.config import detect_device, load_config, resolve_roland_dir, save_config
 from eastlight.core.library import RC505Library
@@ -23,7 +22,6 @@ from eastlight.core.wav import (
     wav_info,
     wav_write_device,
 )
-from eastlight.core.writer import write_rc0
 
 console = Console()
 
@@ -40,7 +38,7 @@ def _resolve_dir(roland_dir: str | None) -> str:
     try:
         return str(resolve_roland_dir(roland_dir))
     except ValueError as e:
-        raise click.ClickException(str(e))
+        raise click.ClickException(str(e)) from e
 
 
 def _open_memory(roland_dir: str, memory_num: int) -> tuple[RC505Library, Memory, SchemaRegistry]:
@@ -402,11 +400,10 @@ def clear(memory_num: int, roland_dir: str | None, force: bool, dry_run: bool) -
                 console.print(f"  delete {w.parent.name}/{w.name}")
         return
 
-    if not force:
-        if not click.confirm(
-            f"Clear memory {memory_num:03d} ('{name}')? This removes RC0 and WAV data."
-        ):
-            raise click.Abort()
+    if not force and not click.confirm(
+        f"Clear memory {memory_num:03d} ('{name}')? This removes RC0 and WAV data."
+    ):
+        raise click.Abort()
 
     lib.clear_memory(memory_num)
     console.print(
@@ -636,11 +633,10 @@ def wav_import_cmd(
 
     # Check for existing audio
     existing = slot.track_wav(track_num)
-    if existing is not None and not force:
-        if not click.confirm(
-            f"Track {track_num} already has audio. Overwrite?"
-        ):
-            raise click.Abort()
+    if existing is not None and not force and not click.confirm(
+        f"Track {track_num} already has audio. Overwrite?"
+    ):
+        raise click.Abort()
 
     # Import and convert audio
     data, sr = import_audio(input_file)
@@ -1170,7 +1166,8 @@ def config(set_dir: str | None, backup: bool | None, show: bool) -> None:
     # Default: show config
     console.print("[bold]EastLight Configuration[/bold]")
     console.print(f"  ROLAND dir: {cfg.roland_dir or '[dim](not set)[/dim]'}")
-    console.print(f"  Backup:     {'[green]enabled[/green]' if cfg.backup else '[red]disabled[/red]'}")
+    backup_state = "[green]enabled[/green]" if cfg.backup else "[red]disabled[/red]"
+    console.print(f"  Backup:     {backup_state}")
     if cfg.recent:
         console.print("  Recent:")
         for r in cfg.recent:
@@ -1350,7 +1347,8 @@ def ctl_set(
 
     # Resolve CTL FUNC names for display
     ctl_func_names = {"ctl_func", "ctl_func_long", "ctl_func_secondary"}
-    resolved_param = schema.fields.get(tag).name if schema and schema.fields.get(tag) else param_name
+    field_def = schema.fields.get(tag) if schema else None
+    resolved_param = field_def.name if field_def else param_name
     func_detail = ""
     if resolved_param in ctl_func_names:
         ctl_func = registry.ctl_func
@@ -1450,16 +1448,15 @@ def backup_restore(timestamp: str, roland_dir: str | None, force: bool) -> None:
     roland_dir = _resolve_dir(roland_dir)
     lib = RC505Library(roland_dir)
 
-    if not force:
-        if not click.confirm(
-            f"Restore backup '{timestamp}'? This will overwrite current files."
-        ):
-            raise click.Abort()
+    if not force and not click.confirm(
+        f"Restore backup '{timestamp}'? This will overwrite current files."
+    ):
+        raise click.Abort()
 
     try:
         restored = lib.restore_backup(timestamp)
     except FileNotFoundError as e:
-        raise click.ClickException(str(e))
+        raise click.ClickException(str(e)) from e
 
     for rel in restored:
         console.print(f"  [green]Restored[/green] {rel}")

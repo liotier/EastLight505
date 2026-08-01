@@ -9,7 +9,7 @@ from __future__ import annotations
 import hashlib
 import shutil
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from .parser import RC0File, parse_memory_file, parse_system_file
@@ -92,7 +92,7 @@ class RC505Library:
         if not self._backup or not path.exists():
             return None
 
-        ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        ts = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
         rel = path.relative_to(self.root)
         backup_path = self._backup_dir / ts / rel
         backup_path.parent.mkdir(parents=True, exist_ok=True)

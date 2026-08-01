@@ -12,7 +12,6 @@ from eastlight.core.library import RC505Library
 from eastlight.core.parser import parse_system_file
 from eastlight.core.schema import SchemaRegistry
 
-
 # Minimal system RC0 with SETUP, PREF, COLOR, USB, MIDI sections
 _SYS_RC0 = '''\
 <?xml version="1.0" encoding="utf-8"?>

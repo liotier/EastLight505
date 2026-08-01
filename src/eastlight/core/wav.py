@@ -171,10 +171,7 @@ def wav_overview(path: str | Path, num_points: int = 1000) -> np.ndarray:
             if len(chunk) == 0:
                 break
             # Use first channel for overview
-            if chunk.ndim > 1:
-                mono = chunk[:, 0]
-            else:
-                mono = chunk
+            mono = chunk[:, 0] if chunk.ndim > 1 else chunk
             overview[i, 0] = mono.min()
             overview[i, 1] = mono.max()
 

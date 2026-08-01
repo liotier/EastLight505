@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pytest
@@ -11,6 +12,22 @@ import pytest
 def fixtures_dir() -> Path:
     """Path to the test fixtures directory."""
     return Path(__file__).parent / "fixtures"
+
+
+@pytest.fixture
+def dump_dir() -> Path:
+    """Path to a real device dump's ROLAND/DATA directory, if available.
+
+    Controlled by the EASTLIGHT_DUMP_DIR env var, which should point at
+    a directory containing an extracted ROLAND/ tree (as produced by
+    `tar -xzf rc0-files.tar.gz`). Defaults to /tmp/rc505-dump for local
+    development. Skips the test if the dump isn't present.
+    """
+    base = Path(os.environ.get("EASTLIGHT_DUMP_DIR", "/tmp/rc505-dump"))
+    d = base / "ROLAND" / "DATA"
+    if not d.exists():
+        pytest.skip("Device dump not available (set EASTLIGHT_DUMP_DIR)")
+    return d
 
 
 @pytest.fixture

@@ -8,7 +8,7 @@ import pytest
 
 from eastlight.core.model import FieldChange, Memory
 from eastlight.core.parser import parse_memory_file
-from eastlight.core.schema import SchemaRegistry, load_schema_from_yaml
+from eastlight.core.schema import SchemaRegistry
 
 
 @pytest.fixture
@@ -85,7 +85,9 @@ class TestMemory:
         assert "MASTER" in names
         assert "SETUP" in names  # from ifx/tfx
 
-    def test_master_schema_resolution(self, sample_rc0_path: Path, registry: SchemaRegistry) -> None:
+    def test_master_schema_resolution(
+        self, sample_rc0_path: Path, registry: SchemaRegistry
+    ) -> None:
         rc0 = parse_memory_file(sample_rc0_path)
         mem = Memory(rc0, registry)
         master = mem.section("MASTER")
@@ -100,11 +102,8 @@ class TestSchemaResolution:
     """Schema resolution tests against real device dump."""
 
     @pytest.fixture
-    def real_mem(self, registry: SchemaRegistry) -> Memory:
-        dump_path = Path("/tmp/rc505-dump/ROLAND/DATA/MEMORY001A.RC0")
-        if not dump_path.exists():
-            pytest.skip("Device dump not available")
-        rc0 = parse_memory_file(dump_path)
+    def real_mem(self, dump_dir: Path, registry: SchemaRegistry) -> Memory:
+        rc0 = parse_memory_file(dump_dir / "MEMORY001A.RC0")
         return Memory(rc0, registry)
 
     def test_rec_schema(self, real_mem: Memory) -> None:

@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import click
 import pytest
 import yaml
 from click.testing import CliRunner
 
-from eastlight.cli.main import cli, _parse_memory_range
+from eastlight.cli.main import _parse_memory_range, cli
 from eastlight.core.library import RC505Library
 from eastlight.core.parser import parse_memory_file
 
@@ -416,9 +417,9 @@ class TestParseMemoryRange:
         assert _parse_memory_range("1-3,2-4") == [1, 2, 3, 4]
 
     def test_invalid_range(self) -> None:
-        with pytest.raises(Exception):
+        with pytest.raises(click.ClickException, match="1-99"):
             _parse_memory_range("0")
 
     def test_invalid_high(self) -> None:
-        with pytest.raises(Exception):
+        with pytest.raises(click.ClickException, match="1-99"):
             _parse_memory_range("100")

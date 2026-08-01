@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
 
 import numpy as np
@@ -13,7 +12,6 @@ from click.testing import CliRunner
 from eastlight.cli.main import cli
 from eastlight.core.parser import parse_memory_file
 from eastlight.core.wav import DEVICE_SAMPLE_RATE, DEVICE_SUBTYPE
-from eastlight.core.writer import write_rc0
 
 
 @pytest.fixture

@@ -8,8 +8,6 @@ import pytest
 from click.testing import CliRunner
 
 from eastlight.cli.main import cli
-from eastlight.core.parser import parse_memory_file
-
 
 # Minimal system RC0 with SETUP + ICTL + ECTL sections
 _SYS_WITH_CTL = '''\
@@ -383,8 +381,10 @@ class TestPackaging:
 
     def test_version_is_set(self) -> None:
         import importlib.metadata
+
+        import eastlight
         version = importlib.metadata.version("eastlight")
-        assert version == "0.1.0"
+        assert version == eastlight.__version__
 
     def test_schema_files_included(self) -> None:
         """Schema YAML files should be included in the package."""

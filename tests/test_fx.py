@@ -9,8 +9,7 @@ from click.testing import CliRunner
 
 from eastlight.cli.main import cli
 from eastlight.core.parser import parse_memory_file
-from eastlight.core.schema import FXTypeEnum, SchemaRegistry, load_fx_types
-
+from eastlight.core.schema import SchemaRegistry
 
 # --- FX-specific RC0 fixture ---
 

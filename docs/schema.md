@@ -29,7 +29,7 @@ mapped. What's left:
 - **CTL FUNC values above 200** — real device data contains values up to at least 211; our transcription only covers 0-200.
 - **ASSIGN field range maxima** — real device data exceeds the declared schema ranges for some ASSIGN fields; the true maxima are unconfirmed.
 
-See [HARDWARE_TESTS.md](https://github.com/liotier/EastLightRC-505mk2Librarian/blob/main/HARDWARE_TESTS.md) for the full verification checklist.
+See [HARDWARE_TESTS.md](https://github.com/liotier/EastLightRC-505mk2Librarian/blob/main/dev/HARDWARE_TESTS.md) for the full verification checklist.
 
 These gaps do not affect data integrity — EastLight preserves all fields during round-trip read/write, including unmapped ones.
 

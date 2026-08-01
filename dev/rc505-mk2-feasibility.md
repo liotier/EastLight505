@@ -445,7 +445,7 @@ The core design principle is **schema-driven data mapping**: YAML files define t
 eastlight/
 ├── pyproject.toml                 # Package metadata, dependencies, entry points
 ├── LICENSE                        # GPL-3.0-or-later
-├── rc505-mk2-feasibility.md      # This document
+├── dev/rc505-mk2-feasibility.md   # This document (moved from root)
 ├── src/
 │   └── eastlight/
 │       ├── __init__.py

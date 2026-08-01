@@ -1529,7 +1529,7 @@ def template_export(
             template[key][sec_name] = dict(resolved.raw.fields)
 
     out_path = Path(output)
-    with open(out_path, "w") as f:
+    with open(out_path, "w", encoding="utf-8") as f:
         yaml.dump(template, f, default_flow_style=False, sort_keys=False)
 
     n = (
@@ -1574,7 +1574,7 @@ def template_apply(
     lib = RC505Library(roland_dir)
     registry = _load_registry()
 
-    with open(template_file) as f:
+    with open(template_file, encoding="utf-8") as f:
         template = yaml.safe_load(f)
 
     sections_data = template.get("_sections", {})

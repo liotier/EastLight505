@@ -31,7 +31,7 @@ def load_config(path: Path | None = None) -> Config:
     if not path.exists():
         return Config()
 
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         raw = yaml.safe_load(f) or {}
 
     return Config(
@@ -54,7 +54,7 @@ def save_config(config: Config, path: Path | None = None) -> Path:
     if config.recent:
         data["recent"] = config.recent
 
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8") as f:
         yaml.safe_dump(data, f, default_flow_style=False)
 
     return path
@@ -105,11 +105,32 @@ def resolve_roland_dir(
 
 def _is_roland_dir(path: Path) -> bool:
     """Check if a path looks like a valid RC-505 MK2 ROLAND/ directory."""
-    return (
-        path.is_dir()
-        and (path / "DATA").is_dir()
-        and any((path / "DATA").glob("MEMORY*A.RC0"))
-    )
+    try:
+        return (
+            path.is_dir()
+            and (path / "DATA").is_dir()
+            and any((path / "DATA").glob("MEMORY*A.RC0"))
+        )
+    except OSError:
+        # Windows can raise for a drive letter assigned to a not-ready
+        # device (e.g. an empty optical drive or unmounted network
+        # share) — treat it the same as "not a ROLAND dir".
+        return False
+
+
+def _safe_exists(path: Path) -> bool:
+    """Check path existence, tolerating OSError from unusual devices.
+
+    Windows can raise (rather than return False) for a drive letter
+    assigned to a not-ready device — an empty optical drive, an
+    unmounted network share, some virtual/cloud-storage drives. This
+    is scanning code: it should never crash the CLI just because one
+    drive letter is in a weird state.
+    """
+    try:
+        return path.exists()
+    except OSError:
+        return False
 
 
 def detect_device() -> list[Path]:
@@ -123,7 +144,7 @@ def detect_device() -> list[Path]:
     if system == "Linux":
         # Standard mount points for removable media
         for base in [Path("/media"), Path("/mnt"), Path("/run/media")]:
-            if base.exists():
+            if _safe_exists(base):
                 # /media/USER/VOLUME/ROLAND or /media/VOLUME/ROLAND
                 for child in _safe_iterdir(base):
                     if child.is_dir():
@@ -131,7 +152,7 @@ def detect_device() -> list[Path]:
 
     elif system == "Darwin":
         volumes = Path("/Volumes")
-        if volumes.exists():
+        if _safe_exists(volumes):
             for child in _safe_iterdir(volumes):
                 _scan_for_roland(child, candidates, depth=1)
 
@@ -139,17 +160,20 @@ def detect_device() -> list[Path]:
         # Scan drive letters D: through Z:
         for letter in "DEFGHIJKLMNOPQRSTUVWXYZ":
             drive = Path(f"{letter}:\\")
-            if drive.exists():
+            if _safe_exists(drive):
                 _scan_for_roland(drive, candidates, depth=1)
 
     return candidates
 
 
 def _safe_iterdir(path: Path) -> list[Path]:
-    """List directory contents, returning empty list on permission errors."""
+    """List directory contents, returning empty list on access errors."""
     try:
         return list(path.iterdir())
-    except PermissionError:
+    except OSError:
+        # PermissionError, or (on Windows) a not-ready-device error from
+        # a drive letter whose existence check passed but that fails on
+        # actual access.
         return []
 
 

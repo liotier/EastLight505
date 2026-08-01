@@ -82,7 +82,7 @@ def _parse_field_def(tag: str, raw: dict) -> FieldDef:
 
 def load_schema_from_yaml(yaml_path: str | Path) -> SectionSchema:
     """Load a section schema from a YAML file."""
-    with open(yaml_path) as f:
+    with open(yaml_path, encoding="utf-8") as f:
         raw = yaml.safe_load(f)
 
     fields = {}
@@ -125,7 +125,7 @@ class FXTypeEnum:
 
 def load_fx_types(yaml_path: str | Path) -> FXTypeEnum:
     """Load FX type enum from a YAML file."""
-    with open(yaml_path) as f:
+    with open(yaml_path, encoding="utf-8") as f:
         raw = yaml.safe_load(f)
 
     enum = FXTypeEnum()
@@ -172,7 +172,7 @@ class CtlFuncEnum:
 
 def load_ctl_func(yaml_path: str | Path) -> CtlFuncEnum:
     """Load CTL FUNC enum from a YAML file."""
-    with open(yaml_path) as f:
+    with open(yaml_path, encoding="utf-8") as f:
         raw = yaml.safe_load(f)
 
     enum = CtlFuncEnum()

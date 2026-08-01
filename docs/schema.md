@@ -20,12 +20,16 @@ EastLight uses a schema-driven architecture: YAML files define the mapping betwe
 
 ## Known gaps
 
-These fields exist on the device but their RC0 storage location has not been identified:
+PREF (all 20 fields, A-T) and SETUP (17 of 22 fields, A-Q) are fully
+mapped. What's left:
 
-- **SETUP fields J-V** (13 fields) — reserved/unknown purpose
-- **PREF fields O-T** (6 fields) — reserved/unknown purpose
-- **CTL FUNC preferences** — MODE PLAY (SYSTEM/MEMORY), MODE UNDO (SYSTEM/MEMORY), QUICK CLEAR (ON/OFF), ALL CLEAR (ON/OFF). Found under MENU -> CTL FUNC -> PREF on the device.
-- **INPUT preferences** — MIC, INST1, INST2 (each SYSTEM/MEMORY). Found under MENU -> INPUT -> SETUP -> page 3. Controls whether input settings come from global system or per-memory.
+- **SETUP fields R-V** (5 fields) — no corresponding menu item found so far; likely reserved/internal (counters, timers, calibration)
+- **CTL FUNC preferences** — MODE PLAY (SYSTEM/MEMORY), MODE UNDO (SYSTEM/MEMORY), QUICK CLEAR (ON/OFF), ALL CLEAR (ON/OFF). Found under MENU -> CTL FUNC -> PREF on the device; RC0 storage location not yet identified.
+- **INPUT preferences** — MIC, INST1, INST2 (each SYSTEM/MEMORY). Found under MENU -> INPUT -> SETUP -> page 3. Controls whether input settings come from global system or per-memory; RC0 storage location not yet identified.
+- **CTL FUNC values above 200** — real device data contains values up to at least 211; our transcription only covers 0-200.
+- **ASSIGN field range maxima** — real device data exceeds the declared schema ranges for some ASSIGN fields; the true maxima are unconfirmed.
+
+See [HARDWARE_TESTS.md](https://github.com/liotier/EastLightRC-505mk2Librarian/blob/main/HARDWARE_TESTS.md) for the full verification checklist.
 
 These gaps do not affect data integrity — EastLight preserves all fields during round-trip read/write, including unmapped ones.
 

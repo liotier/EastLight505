@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import click
@@ -17,7 +18,14 @@ from eastlight.core.parser import parse_memory_file
 from eastlight.core.schema import SchemaRegistry
 from eastlight.core.wav import ExportFormat, wav_export, wav_info
 
-console = Console()
+# Rich's Console falls back to width=80 when output isn't a real terminal
+# (piped, redirected, or under a test harness like CliRunner). That's too
+# narrow for some of our tables — display values like CTL FUNC names run
+# up to 29 characters, and Rich's Table silently *crops* content that
+# doesn't fit rather than erroring, which reads as correct output while
+# actually showing truncated data. Widen the fallback; real terminals
+# still get accurate auto-detected sizing.
+console = Console(width=None if sys.stdout.isatty() else 120)
 
 
 def _load_registry() -> SchemaRegistry:
@@ -167,7 +175,7 @@ def show(memory_num: int, roland_dir: str | None, section: str | None, raw: bool
         table.add_column("Tag", style="dim", width=4)
         table.add_column("Parameter", style="cyan", min_width=20)
         table.add_column("Value", justify="right")
-        table.add_column("Display", style="green")
+        table.add_column("Display", style="green", min_width=32)
 
         for tag, value in resolved.raw.fields.items():
             if raw or resolved.schema is None:
@@ -969,7 +977,7 @@ def sys_show(
         table.add_column("Tag", style="dim", width=4)
         table.add_column("Parameter", style="cyan", min_width=20)
         table.add_column("Value", justify="right")
-        table.add_column("Display", style="green")
+        table.add_column("Display", style="green", min_width=32)
 
         for tag, value in sec.fields.items():
             if raw or schema is None:
@@ -1222,7 +1230,7 @@ def _show_ctl_sections(sys_elem, registry, prefix: str, raw: bool) -> None:
     table.add_column("Tag", style="dim", width=4)
     table.add_column("Parameter", min_width=16)
     table.add_column("Value", justify="right")
-    table.add_column("Display", style="green")
+    table.add_column("Display", style="green", min_width=32)
 
     found = False
     for sec_name in sys_elem.section_names:

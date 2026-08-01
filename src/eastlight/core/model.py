@@ -100,6 +100,24 @@ class ResolvedSection:
         for listener in self._listeners:
             listener(change)
 
+    def _apply_silent(self, tag: str, value: int) -> None:
+        """Set a value and notify listeners WITHOUT pushing to the undo
+        stack. Used by Memory.undo()/redo(), which manage the undo stack
+        themselves — routing through _notify() here would re-push the
+        very change being undone."""
+        old_value = self.raw.get(tag)
+        self.raw[tag] = value
+        param_name = self.schema.tag_to_name(tag) if self.schema else None
+        change = FieldChange(
+            section_name=self.raw.name,
+            tag=tag,
+            param_name=param_name,
+            old_value=old_value,
+            new_value=value,
+        )
+        for listener in self._listeners:
+            listener(change)
+
     def get_by_name(self, param_name: str) -> int | None:
         """Get a parameter value by its human-readable name."""
         if self.schema is None:
@@ -170,20 +188,47 @@ class Memory:
         self._rc0 = rc0
         self._registry = registry
         self._resolved: dict[str, ResolvedSection] = {}
+        self._fx_resolved: dict[tuple[str, str], ResolvedSection] = {}
         self._undo_stack = UndoStack()
         self._dirty = False
         self._resolve_all()
 
     def _resolve_all(self) -> None:
-        """Resolve all sections against the schema registry."""
+        """Resolve all sections against the schema registry.
+
+        The <mem> element's section names are unique and are resolved
+        into a flat, bare-name-keyed dict. <ifx> and <tfx> are kept
+        separate and namespaced by (chain, name): a real memory has
+        the ifx and tfx elements share ~1000 identical section names
+        (subslot headers like "AA", effect sections like "AA_LPF"), so
+        merging them into one bare-name dict would silently let one
+        chain's data overwrite the other's.
+        """
         for element in self._rc0.elements:
             for section_name, section in element.sections.items():
                 schema = self._registry.get(section_name)
-                self._resolved[section_name] = ResolvedSection(
-                    raw=section,
-                    schema=schema,
-                    _undo_stack=self._undo_stack,
-                )
+                if element.element == "mem":
+                    self._resolved[section_name] = ResolvedSection(
+                        raw=section,
+                        schema=schema,
+                        _undo_stack=self._undo_stack,
+                    )
+                else:
+                    # ifx / tfx: not undo-tracked yet. Nothing currently
+                    # edits FX sections through this layer — the CLI's
+                    # fx-set operates on raw RC0Section objects directly.
+                    self._fx_resolved[(element.element, section_name)] = ResolvedSection(
+                        raw=section,
+                        schema=schema,
+                    )
+
+    def fx_section(self, chain: str, name: str) -> ResolvedSection | None:
+        """Get a resolved FX section by chain ('ifx' or 'tfx') and name."""
+        return self._fx_resolved.get((chain, name))
+
+    def fx_section_names(self, chain: str) -> list[str]:
+        """All section names for one FX chain ('ifx' or 'tfx')."""
+        return [name for (c, name) in self._fx_resolved if c == chain]
 
     @property
     def rc0(self) -> RC0File:
@@ -227,7 +272,17 @@ class Memory:
         return self._resolved.get(name)
 
     def track(self, num: int) -> ResolvedSection | None:
-        """Get TRACK1-TRACK6 section."""
+        """Get a TRACK section by number.
+
+        The RC0 format defines TRACK1-TRACK6, but on the RC-505 mk2
+        only tracks 1-5 are user-accessible; TRACK6 is present in
+        every real memory file but is not reachable from any device
+        menu (likely a holdover from the shared RC-505mk2/RC-600
+        codebase — worth revisiting if RC-600 support is ever added).
+        Callers iterating user tracks should use range(1, 6), not
+        range(1, 7); see core/library.py and cli/main.py for the
+        existing convention.
+        """
         return self.section(f"TRACK{num}")
 
     @property
@@ -240,10 +295,11 @@ class Memory:
         change = self._undo_stack.pop_undo()
         if change is None:
             return None
-        # Apply the reverse without triggering another undo push
+        # Apply the reverse and notify listeners, without pushing a new
+        # undo entry (the undo stack is already managed by pop_undo above).
         section = self._resolved.get(change.section_name)
         if section:
-            section.raw[change.tag] = change.old_value
+            section._apply_silent(change.tag, change.old_value)
         return change
 
     def redo(self) -> FieldChange | None:
@@ -253,5 +309,5 @@ class Memory:
             return None
         section = self._resolved.get(change.section_name)
         if section:
-            section.raw[change.tag] = change.new_value
+            section._apply_silent(change.tag, change.new_value)
         return change

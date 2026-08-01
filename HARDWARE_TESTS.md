@@ -3,6 +3,11 @@
 Questions that can only be answered by testing against a real RC-505 mk2.
 Report findings back and we'll update the schema/docs accordingly.
 
+For software validation (does the fixed code actually work against real
+hardware, not just static dump files), see
+**[TESTING_PROTOCOL.md](TESTING_PROTOCOL.md)** — this file only covers
+the remaining schema-mapping questions.
+
 ## 1. Tempo source
 
 Same real memory (`MEMORY001A.RC0`) reports two different tempos depending

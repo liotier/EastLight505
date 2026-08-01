@@ -90,6 +90,78 @@ class TestClearMemory:
         lib = RC505Library(roland_dir, backup=False)
         lib.clear_memory(50)  # no files for slot 50
 
+    def test_clear_removes_waveform_cache(self, roland_dir: Path, tmp_path: Path) -> None:
+        cache_dir = tmp_path / "waveforms"
+        lib = RC505Library(roland_dir, backup=False, waveform_cache_dir=cache_dir)
+        cache_path = lib.waveform_cache_path(1, 1)
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
+        cache_path.write_bytes(b"fake overview")
+
+        lib.clear_memory(1)
+        assert not cache_path.exists()
+
+
+# --- Library: copy_memory / swap_memories waveform cache handling ---
+
+
+class TestWaveformCacheOnCopyAndSwap:
+    def test_copy_carries_cache(self, roland_dir: Path, tmp_path: Path) -> None:
+        cache_dir = tmp_path / "waveforms"
+        lib = RC505Library(roland_dir, backup=False, waveform_cache_dir=cache_dir)
+        src_cache = lib.waveform_cache_path(1, 1)
+        src_cache.parent.mkdir(parents=True, exist_ok=True)
+        src_cache.write_bytes(b"overview-for-1")
+
+        lib.copy_memory(1, 2)
+
+        dst_cache = lib.waveform_cache_path(2, 1)
+        assert dst_cache.exists()
+        assert dst_cache.read_bytes() == b"overview-for-1"
+
+    def test_copy_drops_stale_dst_cache_when_src_has_none(
+        self, roland_dir: Path, tmp_path: Path
+    ) -> None:
+        cache_dir = tmp_path / "waveforms"
+        lib = RC505Library(roland_dir, backup=False, waveform_cache_dir=cache_dir)
+        # Slot 2 has a stale cache from a previous, unrelated import.
+        dst_cache = lib.waveform_cache_path(2, 1)
+        dst_cache.parent.mkdir(parents=True, exist_ok=True)
+        dst_cache.write_bytes(b"stale")
+
+        # Slot 1 (the copy source) has audio but no cache yet.
+        lib.copy_memory(1, 2)
+
+        assert not dst_cache.exists()
+
+    def test_swap_exchanges_caches(self, roland_dir: Path, tmp_path: Path) -> None:
+        cache_dir = tmp_path / "waveforms"
+        lib = RC505Library(roland_dir, backup=False, waveform_cache_dir=cache_dir)
+        cache_1 = lib.waveform_cache_path(1, 1)
+        cache_2 = lib.waveform_cache_path(2, 1)
+        cache_1.parent.mkdir(parents=True, exist_ok=True)
+        cache_1.write_bytes(b"overview-1")
+        cache_2.write_bytes(b"overview-2")
+
+        lib.swap_memories(1, 2)
+
+        assert cache_1.read_bytes() == b"overview-2"
+        assert cache_2.read_bytes() == b"overview-1"
+
+    def test_swap_moves_cache_when_only_one_side_has_it(
+        self, roland_dir: Path, tmp_path: Path
+    ) -> None:
+        cache_dir = tmp_path / "waveforms"
+        lib = RC505Library(roland_dir, backup=False, waveform_cache_dir=cache_dir)
+        cache_1 = lib.waveform_cache_path(1, 1)
+        cache_1.parent.mkdir(parents=True, exist_ok=True)
+        cache_1.write_bytes(b"overview-1")
+
+        lib.swap_memories(1, 2)
+
+        cache_2 = lib.waveform_cache_path(2, 1)
+        assert not cache_1.exists()
+        assert cache_2.read_bytes() == b"overview-1"
+
 
 # --- Library: backup management ---
 

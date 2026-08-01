@@ -20,7 +20,7 @@ from eastlight.core.library import RC505Library
 from eastlight.core.operations import ImportResult, import_track_audio
 from eastlight.core.parser import parse_memory_file
 from eastlight.core.schema import SchemaRegistry
-from eastlight.core.wav import DEVICE_SAMPLE_RATE, DEVICE_SUBTYPE
+from eastlight.core.wav import DEVICE_SAMPLE_RATE, DEVICE_SUBTYPE, load_overview
 
 
 @pytest.fixture
@@ -177,3 +177,38 @@ class TestImportTrackAudio:
 
         info = sf.info(str(wav_dir / "001_1.WAV"))
         assert info.frames == 2000
+
+    def test_caches_waveform_overview(
+        self, roland_dir: Path, registry: SchemaRegistry, tmp_path: Path
+    ) -> None:
+        src = tmp_path / "source.wav"
+        _make_source_wav(src, frames=22050)
+
+        cache_dir = tmp_path / "waveforms"
+        lib = RC505Library(roland_dir, backup=False, waveform_cache_dir=cache_dir)
+        import_track_audio(lib, registry, 1, 2, src)
+
+        cache_path = lib.waveform_cache_path(1, 2)
+        assert cache_path.exists()
+        overview = load_overview(cache_path)
+        assert overview.shape[1] == 2  # [min, max] per segment
+
+    def test_recaches_on_reimport(
+        self, roland_dir: Path, registry: SchemaRegistry, tmp_path: Path
+    ) -> None:
+        """A second import should overwrite the cache, not just the WAV."""
+        cache_dir = tmp_path / "waveforms"
+        lib = RC505Library(roland_dir, backup=False, waveform_cache_dir=cache_dir)
+
+        quiet = tmp_path / "quiet.wav"
+        quiet_data = np.zeros((1000, 2), dtype=np.float32)
+        sf.write(str(quiet), quiet_data, DEVICE_SAMPLE_RATE, subtype="FLOAT")
+        import_track_audio(lib, registry, 1, 1, quiet)
+        quiet_overview = load_overview(lib.waveform_cache_path(1, 1))
+        assert quiet_overview.max() == 0.0
+
+        loud = tmp_path / "loud.wav"
+        _make_source_wav(loud, frames=1000)
+        import_track_audio(lib, registry, 1, 1, loud)
+        loud_overview = load_overview(lib.waveform_cache_path(1, 1))
+        assert loud_overview.max() > 0.0

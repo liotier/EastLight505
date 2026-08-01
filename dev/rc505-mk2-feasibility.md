@@ -662,6 +662,7 @@ However, the core API must be designed **with the GUI in mind**. Three capabilit
 1. **Change notification** — observer/signal pattern so the GUI reacts to model changes without polling
 2. **Undo/redo stack** — must live in the core library, not the GUI layer
 3. **Lazy loading** — don't parse all 99 memories on startup; load on demand with metadata caching
+4. **Waveform preview data** — done ahead of the GUI. `import_track_audio()` caches a downsampled min/max overview (`core.wav.wav_overview()`) to `~/.config/eastlight/waveforms/<hash>/` (outside the device filesystem, alongside backups) whenever audio is imported, and `RC505Library` keeps it in sync across copy/swap/clear. The GUI reads the cached array and paints it directly (e.g. `QPainter.drawPolyline()`) rather than decoding a rasterized image — stays crisp across zoom/resize and doesn't bake in a light/dark theme choice.
 
 ### 8.9 Drag-and-Drop as Core Interaction Pattern
 

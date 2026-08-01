@@ -15,7 +15,7 @@ from pathlib import Path
 from .library import RC505Library
 from .model import Memory
 from .schema import SchemaRegistry
-from .wav import DEVICE_SAMPLE_RATE, import_audio, wav_write_device
+from .wav import DEVICE_SAMPLE_RATE, import_audio, save_overview, wav_overview, wav_write_device
 
 
 @dataclass
@@ -38,9 +38,11 @@ def import_track_audio(
 
     Converts the source audio to the device's native format (32-bit
     float, stereo, 44.1kHz — see core.wav.import_audio), writes it to
-    WAVE/, and updates the track's has_audio / total_samples /
+    WAVE/, updates the track's has_audio / total_samples /
     samples_per_measure / loop_length fields so the device actually
-    recognizes the imported audio.
+    recognizes the imported audio, and caches a downsampled waveform
+    overview (see core.wav.wav_overview and RC505Library.waveform_cache_path)
+    for future GUI preview rendering.
 
     Always overwrites any existing audio on the target track — callers
     that want a confirmation prompt should check
@@ -82,6 +84,12 @@ def import_track_audio(
     wav_dir.mkdir(parents=True, exist_ok=True)
     dst_path = wav_dir / f"{memory_num:03d}_{track_num}.WAV"
     wav_write_device(dst_path, data, sr)
+
+    # Cache a downsampled waveform overview for instant GUI preview
+    # rendering later — cheap to compute now, expensive to redo per view.
+    cache_path = lib.waveform_cache_path(memory_num, track_num)
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    save_overview(cache_path, wav_overview(dst_path))
 
     total_samples = data.shape[0]
     measures = None

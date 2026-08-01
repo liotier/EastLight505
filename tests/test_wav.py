@@ -14,6 +14,8 @@ from eastlight.core.wav import (
     DEVICE_SUBTYPE,
     ExportFormat,
     import_audio,
+    load_overview,
+    save_overview,
     wav_export,
     wav_info,
     wav_overview,
@@ -140,6 +142,26 @@ class TestWavOverview:
         # Min should be <= 0 and max >= 0 for random audio
         assert overview[:, 0].min() < 0  # min column
         assert overview[:, 1].max() > 0  # max column
+
+
+class TestOverviewCache:
+    def test_save_load_roundtrip(self, device_wav: Path, tmp_path: Path) -> None:
+        overview = wav_overview(device_wav, num_points=200)
+        cache_path = tmp_path / "overview.npy"
+        save_overview(cache_path, overview)
+
+        loaded = load_overview(cache_path)
+        assert loaded.shape == overview.shape
+        assert loaded.dtype == overview.dtype
+        np.testing.assert_array_equal(loaded, overview)
+
+    def test_save_appends_npy_extension_once(self, device_wav: Path, tmp_path: Path) -> None:
+        overview = wav_overview(device_wav, num_points=10)
+        cache_path = tmp_path / "overview.npy"
+        save_overview(cache_path, overview)
+
+        assert cache_path.exists()
+        assert not (tmp_path / "overview.npy.npy").exists()
 
 
 class TestRoundtrip:

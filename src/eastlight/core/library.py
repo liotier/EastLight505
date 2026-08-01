@@ -16,6 +16,11 @@ from .parser import RC0File, parse_memory_file, parse_system_file
 from .writer import write_rc0
 
 _BACKUP_BASE = Path.home() / ".config" / "eastlight" / "backups"
+_WAVEFORM_CACHE_BASE = Path.home() / ".config" / "eastlight" / "waveforms"
+
+
+def _path_hash(roland_dir: Path) -> str:
+    return hashlib.sha256(str(roland_dir.resolve()).encode()).hexdigest()[:12]
 
 
 def backup_dir_for(roland_dir: Path) -> Path:
@@ -25,8 +30,19 @@ def backup_dir_for(roland_dir: Path) -> Path:
     where <hash> is derived from the resolved ROLAND directory path.
     This keeps backups outside the device filesystem.
     """
-    path_hash = hashlib.sha256(str(roland_dir.resolve()).encode()).hexdigest()[:12]
-    return _BACKUP_BASE / path_hash
+    return _BACKUP_BASE / _path_hash(roland_dir)
+
+
+def waveform_cache_dir_for(roland_dir: Path) -> Path:
+    """Compute waveform overview cache directory for a given ROLAND directory.
+
+    Cached waveform overviews (downsampled min/max arrays, for GUI
+    preview rendering) are stored under
+    ~/.config/eastlight/waveforms/<hash>/, alongside backups — kept
+    outside the device filesystem like everything else EastLight
+    generates.
+    """
+    return _WAVEFORM_CACHE_BASE / _path_hash(roland_dir)
 
 
 @dataclass
@@ -66,6 +82,8 @@ class RC505Library:
             Default True.
         backup_dir: Override backup directory (for testing). If None,
             computed from the ROLAND directory path.
+        waveform_cache_dir: Override waveform overview cache directory
+            (for testing). If None, computed from the ROLAND directory path.
     """
 
     def __init__(
@@ -74,12 +92,14 @@ class RC505Library:
         *,
         backup: bool = True,
         backup_dir: Path | None = None,
+        waveform_cache_dir: Path | None = None,
     ) -> None:
         self.root = Path(roland_dir)
         self.data_dir = self.root / "DATA"
         self.wave_dir = self.root / "WAVE"
         self._backup = backup
         self._backup_dir = backup_dir or backup_dir_for(self.root)
+        self._waveform_cache_dir = waveform_cache_dir or waveform_cache_dir_for(self.root)
 
         if not self.data_dir.exists():
             raise FileNotFoundError(f"DATA directory not found: {self.data_dir}")
@@ -98,6 +118,15 @@ class RC505Library:
         backup_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(path, backup_path)
         return backup_path
+
+    def waveform_cache_path(self, number: int, track: int) -> Path:
+        """Path to the cached waveform overview for a memory/track.
+
+        The file may not exist — a cache miss just means no overview
+        has been generated yet (e.g. audio predates this feature, or
+        was written outside EastLight).
+        """
+        return self._waveform_cache_dir / f"{number:03d}_{track}.npy"
 
     def memory_slot(self, number: int) -> MemorySlot:
         """Get a memory slot by number (1-99)."""
@@ -183,6 +212,17 @@ class RC505Library:
                 self._backup_file(dst_wav)
                 shutil.copy2(src_wav, dst_wav)
 
+                # Carry the waveform overview cache along with the audio
+                # it describes — dropping it here just means a cache
+                # miss (regenerated on next import), not stale data.
+                src_cache = self.waveform_cache_path(src, track)
+                dst_cache = self.waveform_cache_path(dst, track)
+                if src_cache.exists():
+                    dst_cache.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(src_cache, dst_cache)
+                else:
+                    dst_cache.unlink(missing_ok=True)
+
     def swap_memories(self, a: int, b: int) -> None:
         """Swap two memory slots (RC0 data + WAV audio)."""
         if not 1 <= a <= 99:
@@ -220,6 +260,24 @@ class RC505Library:
                     self._backup_file(wav_a)
                 if b_exists:
                     self._backup_file(wav_b)
+
+                # Swap waveform overview caches alongside the audio they
+                # describe. Checked independently of WAV existence, in
+                # case a cache somehow outlived its audio.
+                cache_a = self.waveform_cache_path(a, track)
+                cache_b = self.waveform_cache_path(b, track)
+                cache_a_exists = cache_a.exists()
+                cache_b_exists = cache_b.exists()
+                if cache_a_exists or cache_b_exists:
+                    tmp_track = tmp_dir / f"_{track}"
+                    tmp_track.mkdir(parents=True, exist_ok=True)
+                    cache_a.parent.mkdir(parents=True, exist_ok=True)
+                    if cache_a_exists:
+                        shutil.move(str(cache_a), str(tmp_track / "tmp.npy"))
+                    if cache_b_exists:
+                        shutil.move(str(cache_b), str(cache_a))
+                    if cache_a_exists:
+                        shutil.move(str(tmp_track / "tmp.npy"), str(cache_b))
 
                 if not a_exists and not b_exists:
                     continue
@@ -291,6 +349,9 @@ class RC505Library:
             # Remove empty track dir
             if wav_dir.exists() and not any(wav_dir.iterdir()):
                 wav_dir.rmdir()
+            # Drop the waveform overview cache too — it's a disposable,
+            # regenerable derivative of the audio, not backed up.
+            self.waveform_cache_path(number, track).unlink(missing_ok=True)
 
     def list_backups(self) -> list[tuple[str, list[Path]]]:
         """List all backup snapshots as (timestamp, [relative_paths]).

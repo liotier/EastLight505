@@ -11,6 +11,7 @@ from eastlight.cli.main import cli
 from eastlight.core.config import (
     Config,
     _is_roland_dir,
+    _safe_exists,
     detect_device,
     load_config,
     resolve_roland_dir,
@@ -178,6 +179,30 @@ class TestDeviceDetection:
         # Just verify it doesn't crash; result depends on host system
         result = detect_device()
         assert isinstance(result, list)
+
+    def test_safe_exists_normal_path(self, tmp_path: Path) -> None:
+        assert _safe_exists(tmp_path) is True
+        assert _safe_exists(tmp_path / "nonexistent") is False
+
+    def test_safe_exists_tolerates_oserror(self, tmp_path: Path) -> None:
+        """Windows can raise OSError (not just return False) from a
+        drive letter assigned to a not-ready device — an empty optical
+        drive, an unmounted network share. detect_device() scans drive
+        letters D-Z unconditionally, so this must never propagate and
+        crash a caller that just wants to know "is a device connected"."""
+
+        class RaisingPath(type(tmp_path)):
+            def exists(self, *args, **kwargs):
+                raise OSError("[WinError 21] The device is not ready")
+
+        assert _safe_exists(RaisingPath(tmp_path)) is False
+
+    def test_is_roland_dir_tolerates_oserror(self, tmp_path: Path) -> None:
+        class RaisingPath(type(tmp_path)):
+            def is_dir(self, *args, **kwargs):
+                raise OSError("[WinError 21] The device is not ready")
+
+        assert _is_roland_dir(RaisingPath(tmp_path)) is False
 
 
 # --- Dir resolution tests ---

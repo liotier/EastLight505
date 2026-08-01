@@ -30,10 +30,19 @@ jobs:
       - name: Lint
         run: ruff check src/ tests/
       - name: Extract device dump fixtures
-        shell: bash
+        # Python's tarfile module instead of shell tar: avoids Git Bash's
+        # path translation on Windows runners (RUNNER_TEMP is a native
+        # Windows path; mixing it into a bash-interpolated string for
+        # `tar -C` is exactly the kind of thing that works on 9 out of 10
+        # runners and silently breaks on the 10th).
         run: |
-          mkdir -p "${RUNNER_TEMP}/rc505-dump"
-          tar -xzf rc0-files.tar.gz -C "${RUNNER_TEMP}/rc505-dump"
+          python -c "
+          import os, tarfile
+          dest = os.path.join(os.environ['RUNNER_TEMP'], 'rc505-dump')
+          os.makedirs(dest, exist_ok=True)
+          with tarfile.open('rc0-files.tar.gz') as tf:
+              tf.extractall(dest, filter='data')
+          "
       - name: Test
         env:
           EASTLIGHT_DUMP_DIR: ${{ runner.temp }}/rc505-dump

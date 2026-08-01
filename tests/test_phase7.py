@@ -339,6 +339,82 @@ class TestTemplateApply:
         assert "Warning" in result.output  # warns about missing slots
 
 
+# --- CLI: template export/apply with ifx/tfx section collision ---
+
+
+@pytest.fixture
+def two_chain_roland_dir(tmp_path: Path, two_chain_rc0_content: str) -> Path:
+    """ROLAND/ with two memories that have distinct ifx/tfx AA data.
+
+    Memory 1 uses the fixture's values as-is (ifx AA fx_type=35, tfx
+    AA fx_type=49). Memory 2 has different values in both chains, so a
+    template-apply from memory 1 onto memory 2 has something to prove.
+    """
+    root = tmp_path / "ROLAND"
+    data = root / "DATA"
+    wave = root / "WAVE"
+    data.mkdir(parents=True)
+    wave.mkdir(parents=True)
+
+    (data / "MEMORY001A.RC0").write_text(two_chain_rc0_content, encoding="utf-8")
+
+    content_002 = (
+        two_chain_rc0_content
+        .replace('<mem id="0">', '<mem id="1">')
+        .replace('<ifx id="0">', '<ifx id="1">')
+        .replace('<tfx id="0">', '<tfx id="1">')
+        .replace("<C>35</C>\n<D>0</D>\n</AA>", "<C>1</C>\n<D>0</D>\n</AA>", 1)  # ifx AA
+        .replace("<C>49</C>\n<D>0</D>\n</AA>", "<C>2</C>\n<D>0</D>\n</AA>", 1)  # tfx AA
+    )
+    (data / "MEMORY002A.RC0").write_text(content_002, encoding="utf-8")
+
+    return root
+
+
+class TestTemplateExportFXCollision:
+    def test_export_captures_ifx_and_tfx_distinctly(
+        self, runner: CliRunner, two_chain_roland_dir: Path, tmp_path: Path
+    ) -> None:
+        """Regression test for the ifx/tfx section-name collision: ifx
+        and tfx both have a section named 'AA' (and 'AA_LPF'), and a
+        naive bare-name-keyed export silently drops one chain's data
+        and duplicates the other's under both labels."""
+        out = tmp_path / "template.yaml"
+        result = runner.invoke(
+            cli, ["template-export", "1", str(out), "-d", str(two_chain_roland_dir)]
+        )
+        assert result.exit_code == 0
+        data = yaml.safe_load(out.read_text())
+
+        assert data["_ifx_sections"]["AA"]["C"] == 35
+        assert data["_tfx_sections"]["AA"]["C"] == 49
+        assert data["_ifx_sections"]["AA_LPF"]["A"] == 3
+        assert data["_tfx_sections"]["AA_LPF"]["A"] == 9
+
+
+class TestTemplateApplyFXCollision:
+    def test_apply_restores_ifx_and_tfx_distinctly(
+        self, runner: CliRunner, two_chain_roland_dir: Path, tmp_path: Path
+    ) -> None:
+        # Confirm memory 2 starts with different AA values than memory 1
+        before = parse_memory_file(two_chain_roland_dir / "DATA" / "MEMORY002A.RC0")
+        assert before.ifx.sections["AA"]["C"] == 1
+        assert before.tfx.sections["AA"]["C"] == 2
+
+        tmpl = tmp_path / "t.yaml"
+        runner.invoke(
+            cli, ["template-export", "1", str(tmpl), "-d", str(two_chain_roland_dir)]
+        )
+        result = runner.invoke(
+            cli, ["template-apply", str(tmpl), "2", "-d", str(two_chain_roland_dir)]
+        )
+        assert result.exit_code == 0
+
+        after = parse_memory_file(two_chain_roland_dir / "DATA" / "MEMORY002A.RC0")
+        assert after.ifx.sections["AA"]["C"] == 35  # from memory 1's ifx
+        assert after.tfx.sections["AA"]["C"] == 49  # from memory 1's tfx, not ifx's
+
+
 # --- CLI: bulk-set command ---
 
 
